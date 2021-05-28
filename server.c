@@ -1,7 +1,7 @@
 #include "segel.h"
 #include "request.h"
+#include "queue.h" // we added this
 
-// 
 // server.c: A very, very simple web server
 //
 // To run:
@@ -11,6 +11,24 @@
 // Most of the work is done within routines written in request.c
 //
 
+/* Implementing multi-threaded server */
+pthread_cond_t cond;
+pthread_mutex_t mutex;
+
+void work(struct Queue *queue) {
+    pthread_mutex_lock(&mutex);
+    // variable queue_size is updated inside dequeue
+
+}
+
+void createThreadPool(int num_of_threads) {
+    for(int i=0; i<num_of_threads; i++) {
+        pthread_create()
+    }
+}
+
+/* Done implementing multi-threaded server */
+
 // HW3: Parse the new arguments too
 void getargs(int *port, int argc, char *argv[])
 {
@@ -19,6 +37,7 @@ void getargs(int *port, int argc, char *argv[])
 	exit(1);
     }
     *port = atoi(argv[1]);
+
 }
 
 
@@ -32,6 +51,20 @@ int main(int argc, char *argv[])
     // 
     // HW3: Create some threads...
     //
+    /* Start multi-thread implementation */
+    //int num_of_threads = argv[];
+
+    // create request queue
+    struct Queue *queue = initQueue();
+
+    // initialize condition and mutex
+    pthread_cond_init(&cond, NULL);
+    pthread_mutex_init(&mutex, NULL);
+
+    // create num_of_threads threads
+    createThreadPool(num_of_threads);
+
+    /* Done multi-thread implementation */
 
     listenfd = Open_listenfd(port);
     while (1) {
