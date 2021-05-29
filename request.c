@@ -162,6 +162,7 @@ void requestHandle(int fd)
    rio_t rio;
 
    Rio_readinitb(&rio, fd);
+    printf("fd = %d\n", fd);
    Rio_readlineb(&rio, buf, MAXLINE);
    sscanf(buf, "%s %s %s", method, uri, version);
 

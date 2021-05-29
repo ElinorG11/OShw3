@@ -7,18 +7,20 @@ struct Node{
     struct Node *next;
 };
 
+int getConnfd(struct Node *node){
+    return node->connfd;
+}
+
+struct Node * getNext(struct Node *node) {
+    return node->next;
+}
+
 struct Queue *initQueue() {
     struct Queue *queue = malloc(sizeof(struct Queue));
     if(queue == NULL) {
         return NULL;
     }
 
-    queue->head = malloc(sizeof(struct Node));
-    if(queue->head == NULL) {
-        return NULL;
-    }
-
-    queue->head->next = NULL;
     queue->end = queue->head;
     queue->queue_size = 0;
     return queue;
@@ -38,9 +40,10 @@ void enqueue(struct Queue *queue, int connfd) {
         queue->head = node;
         queue->end = queue->head;
     }
-
-    queue->end->next = node;
-    queue->end = queue->end->next;
+    else {
+        queue->end->next = node;
+        queue->end = queue->end->next;
+    }
 
     queue->queue_size++;
 }
@@ -92,3 +95,13 @@ void dequequeById(struct Queue *queue, int id) {
 
 }
 
+void destroyQueue(struct Queue *queue) {
+    struct Node *curr_iterator = queue->head;
+    struct Node *prev_iterator = queue->head;
+    while (curr_iterator != NULL) {
+        prev_iterator = curr_iterator;
+        curr_iterator = prev_iterator->next;
+        free(prev_iterator);
+    }
+    free(queue);
+}

@@ -1,9 +1,5 @@
-//
-// Created by student on 5/28/21.
-//
-
-#ifndef OSHW3_QUEUE_H
-#define OSHW3_QUEUE_H
+#include <stdio.h>
+#include <stdlib.h>
 
 struct Queue{
     struct Node *head;
@@ -15,6 +11,6 @@ struct Queue *initQueue();
 void enqueue(struct Queue *queue, int connfd);
 int dequeque(struct Queue *queue);
 void dequequeById(struct Queue *queue, int id);
-
-
-#endif //OSHW3_QUEUE_H
+int getConnfd(struct Node *node);
+struct Node * getNext(struct Node *node);
+void destroyQueue(struct Queue *queue);

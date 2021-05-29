@@ -12,7 +12,9 @@
 //
 
 /* Implementing multi-threaded server */
-pthread_cond_t cond;
+#define MAX_SCHED_ALG_SIZE 100
+
+pthread_cond_t consumer_cond,producer_cond;
 pthread_mutex_t mutex;
 
 // shared queues of requests
@@ -26,19 +28,22 @@ void * thread_workload() {
         pthread_mutex_lock(&mutex);
         // variable queue_size is updated inside dequeue
         while (waiting_queue->queue_size == 0) {
-            pthread_cond_wait(&cond, &mutex);
+            pthread_cond_wait(&consumer_cond, &mutex);
         }
         // get request from waiting queue
         int connfd = dequeque(waiting_queue);
         enqueue(currently_executing_queue, connfd);
         pthread_mutex_unlock(&mutex);
-
+        printf("before handling req %d\n",connfd);
         // request handling of a thread shouldn't block the others
         requestHandle(connfd);
+        printf("thread finished handling req\n");
 
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
         dequequeById(currently_executing_queue, connfd);
+        // send signal to producer in case que
+        pthread_cond_signal(&producer_cond);
         pthread_mutex_unlock(&mutex);
     }
 }
@@ -56,24 +61,28 @@ void createThreadPool(int thread_count) {
 // HW3: Parse the new arguments too
 void getargs(int *port, int *thread_count, int *max_queue_size, char* sched_alg, int argc, char *argv[])
 {
-    if (argc < 2) {
+    if (argc < 5) {
 	fprintf(stderr, "Usage: %s <port>\n", argv[0]);
 	exit(1);
     }
     *port = atoi(argv[1]);
     *thread_count = atoi(argv[2]);
     *max_queue_size = atoi(argv[3]);
-    sched_alg = argv[4];
+    // should check argument errors
+    if(strlen(argv[4]) < 100){
+        sched_alg = argv[4];
+    }
 }
 
 
 int main(int argc, char *argv[])
 {
     int listenfd, connfd, port, clientlen, thread_count, max_queue_size;
-    char sched_alg;
+    char *sched_alg = malloc(MAX_SCHED_ALG_SIZE);
     struct sockaddr_in clientaddr;
 
-    getargs(&port, &thread_count, &max_queue_size, &sched_alg, argc, argv);
+    getargs(&port, &thread_count, &max_queue_size, sched_alg, argc, argv);
+
 
     // 
     // HW3: Create some threads...
@@ -84,8 +93,11 @@ int main(int argc, char *argv[])
     waiting_queue = initQueue();
     currently_executing_queue = initQueue();
 
+
+
     // initialize condition and mutex
-    pthread_cond_init(&cond, NULL);
+    pthread_cond_init(&producer_cond, NULL);
+    pthread_cond_init(&consumer_cond, NULL);
     pthread_mutex_init(&mutex, NULL);
 
     // create num_of_threads threads
@@ -97,7 +109,7 @@ int main(int argc, char *argv[])
     while (1) {
 	clientlen = sizeof(clientaddr);
 	connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *) &clientlen);
-
+    printf("got connfd, %d\n", connfd);
 	// 
 	// HW3: In general, don't handle the request in the main thread.
 	// Save the relevant info in a buffer and have one of the worker threads 
@@ -107,25 +119,29 @@ int main(int argc, char *argv[])
 
 	pthread_mutex_lock(&mutex);
 
-	// crititcal section
-	// make sure waiting & currently_executing requests are less than queue size specified in cmd
-	if(waiting_queue->queue_size + currently_executing_queue->queue_size < max_queue_size) {
-	    // waiting queue size will be increased inside enqueue()
-        enqueue(waiting_queue, connfd);
-        // signal all threads that a request has been added
-        pthread_cond_broadcast(&cond);
-	}
-	else {
-	    // part 2.0
-	}
+    // crititcal section
+    // make sure waiting & currently_executing requests are less than queue size specified in cmd
+    while (waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size) {
+        pthread_cond_wait(&producer_cond, &mutex);
+    }
+
+
+    // waiting queue size will be increased inside enqueue()
+    enqueue(waiting_queue, connfd);
+    // signal all threads that a request has been added
+    pthread_cond_broadcast(&consumer_cond);
 
     pthread_mutex_unlock(&mutex);
+    printf("finished handling req\n");
 
     /* Done multi-thread implementation */
 
 	Close(connfd);
     }
 
+    free(sched_alg);
+    destroyQueue(waiting_queue);
+    destroyQueue(currently_executing_queue);
 }
 
 
