@@ -125,6 +125,9 @@ int main(int argc, char *argv[])
         pthread_cond_wait(&producer_cond, &mutex);
     }
 
+    switch(sched_alg):
+    case "block":
+
 
     // waiting queue size will be increased inside enqueue()
     enqueue(waiting_queue, connfd);
