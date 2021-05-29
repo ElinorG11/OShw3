@@ -15,54 +15,81 @@
 pthread_cond_t cond;
 pthread_mutex_t mutex;
 
-void work(struct Queue *queue) {
-    pthread_mutex_lock(&mutex);
-    // variable queue_size is updated inside dequeue
+// shared queues of requests
+struct Queue *waiting_queue;
+struct Queue *currently_executing_queue;
 
+void * thread_workload() {
+    // after handling a specific request the thread continues waiting for new ones
+    while(1) {
+        // executing critical section - accessing to shared queue
+        pthread_mutex_lock(&mutex);
+        // variable queue_size is updated inside dequeue
+        while (waiting_queue->queue_size == 0) {
+            pthread_cond_wait(&cond, &mutex);
+        }
+        // get request from waiting queue
+        int connfd = dequeque(waiting_queue);
+        enqueue(currently_executing_queue, connfd);
+        pthread_mutex_unlock(&mutex);
+
+        // request handling of a thread shouldn't block the others
+        requestHandle(connfd);
+
+        // executing critical section - accessing to shared queue
+        pthread_mutex_lock(&mutex);
+        dequequeById(currently_executing_queue, connfd);
+        pthread_mutex_unlock(&mutex);
+    }
 }
 
-void createThreadPool(int num_of_threads) {
-    for(int i=0; i<num_of_threads; i++) {
-        pthread_create()
+void createThreadPool(int thread_count) {
+    pthread_t threads[thread_count];
+    for(int i=0; i<thread_count; i++) {
+        pthread_create(&threads[i], NULL, thread_workload, NULL);
     }
+    // Perhaps should store threads in list ?
 }
 
 /* Done implementing multi-threaded server */
 
 // HW3: Parse the new arguments too
-void getargs(int *port, int argc, char *argv[])
+void getargs(int *port, int *thread_count, int *max_queue_size, char* sched_alg, int argc, char *argv[])
 {
     if (argc < 2) {
 	fprintf(stderr, "Usage: %s <port>\n", argv[0]);
 	exit(1);
     }
     *port = atoi(argv[1]);
-
+    *thread_count = atoi(argv[2]);
+    *max_queue_size = atoi(argv[3]);
+    sched_alg = argv[4];
 }
 
 
 int main(int argc, char *argv[])
 {
-    int listenfd, connfd, port, clientlen;
+    int listenfd, connfd, port, clientlen, thread_count, max_queue_size;
+    char sched_alg;
     struct sockaddr_in clientaddr;
 
-    getargs(&port, argc, argv);
+    getargs(&port, &thread_count, &max_queue_size, &sched_alg, argc, argv);
 
     // 
     // HW3: Create some threads...
     //
     /* Start multi-thread implementation */
-    //int num_of_threads = argv[];
 
     // create request queue
-    struct Queue *queue = initQueue();
+    waiting_queue = initQueue();
+    currently_executing_queue = initQueue();
 
     // initialize condition and mutex
     pthread_cond_init(&cond, NULL);
     pthread_mutex_init(&mutex, NULL);
 
     // create num_of_threads threads
-    createThreadPool(num_of_threads);
+    createThreadPool(thread_count);
 
     /* Done multi-thread implementation */
 
@@ -76,7 +103,25 @@ int main(int argc, char *argv[])
 	// Save the relevant info in a buffer and have one of the worker threads 
 	// do the work. 
 	// 
-	requestHandle(connfd);
+    /* Start multi-thread implementation */
+
+	pthread_mutex_lock(&mutex);
+
+	// crititcal section
+	// make sure waiting & currently_executing requests are less than queue size specified in cmd
+	if(waiting_queue->queue_size + currently_executing_queue->queue_size < max_queue_size) {
+	    // waiting queue size will be increased inside enqueue()
+        enqueue(waiting_queue, connfd);
+        // signal all threads that a request has been added
+        pthread_cond_broadcast(&cond);
+	}
+	else {
+	    // part 2.0
+	}
+
+    pthread_mutex_unlock(&mutex);
+
+    /* Done multi-thread implementation */
 
 	Close(connfd);
     }

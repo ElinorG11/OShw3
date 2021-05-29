@@ -1,17 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
+#include "queue.h"
 
 struct Node{
     int connfd;
     struct Node *next;
-};
-
-struct Queue{
-    struct Node *head;
-    struct Node *end;
-
-    int queue_size;
 };
 
 struct Queue *initQueue() {
@@ -52,21 +45,50 @@ void enqueue(struct Queue *queue, int connfd) {
     queue->queue_size++;
 }
 
-void dequeque(struct Queue *queue) {
+int dequeque(struct Queue *queue) {
+    if(queue == NULL) return -1;
+
+    // Empty queue
+    if(queue->queue_size == 0) return -1;
+
+    // Remove and return first request
+    struct Node *temp = queue->head;
+    queue->head = queue->head->next;
+    int connfd = temp->connfd;
+    free(temp);
+
+    queue->queue_size--;
+    return connfd;
+}
+
+void dequequeById(struct Queue *queue, int id) {
     if(queue == NULL) return;
 
     // Empty queue
     if(queue->queue_size == 0) return;
 
-    // Remove and return first request
-    struct Node *temp = queue->head;
-    queue->head = queue->head->next;
-    free(temp);
+    struct Node *iterator = queue->head;
+    struct Node *prev_iterator = queue->head;
+    while (iterator != NULL) {
 
-    queue->queue_size--;
-}
+        if(iterator->connfd == id) {
+            // head is the required element
+            if(iterator == queue->head) {
+                queue->head = iterator->next;
+                free(iterator);
+                queue->queue_size--;
+                break;
+            }
 
-int queueSize(struct Queue *queue){
-    return queue->queue_size;
+            prev_iterator->next = iterator->next;
+            free(iterator);
+            queue->queue_size--;
+            break;
+        }
+
+        prev_iterator = iterator;
+        iterator = iterator->next;
+    }
+
 }
 

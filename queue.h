@@ -5,11 +5,16 @@
 #ifndef OSHW3_QUEUE_H
 #define OSHW3_QUEUE_H
 
-struct Queue;
+struct Queue{
+    struct Node *head;
+    struct Node *end;
+    int queue_size;
+};
 
 struct Queue *initQueue();
 void enqueue(struct Queue *queue, int connfd);
-void dequeque(struct Queue *queue);
-int queueSize(struct Queue *queue)
+int dequeque(struct Queue *queue);
+void dequequeById(struct Queue *queue, int id);
+
 
 #endif //OSHW3_QUEUE_H
