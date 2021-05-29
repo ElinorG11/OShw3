@@ -84,6 +84,7 @@ int getSchedAlgNum(char *sched_alg) {
     } else if(strcmp(sched_alg,"random") == 0) {
         return 3;
     }
+    return -1;
 }
 
 
@@ -97,6 +98,10 @@ int main(int argc, char *argv[])
 
     int sched_alg_num = getSchedAlgNum(sched_alg);
 
+    if(sched_alg_num == -1) {
+        // handle error
+    }
+
     // 
     // HW3: Create some threads...
     //
@@ -105,8 +110,6 @@ int main(int argc, char *argv[])
     // create request queue
     waiting_queue = initQueue();
     currently_executing_queue = initQueue();
-
-
 
     // initialize condition and mutex
     pthread_cond_init(&producer_cond, NULL);
@@ -170,7 +173,7 @@ int main(int argc, char *argv[])
 
 	Close(connfd);
     }
-
+    // should we also Close(listenfd);
     free(sched_alg);
     destroyQueue(waiting_queue);
     destroyQueue(currently_executing_queue);
