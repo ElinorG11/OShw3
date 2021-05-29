@@ -14,7 +14,8 @@
 /* Implementing multi-threaded server */
 #define MAX_SCHED_ALG_SIZE 100
 
-pthread_cond_t consumer_cond,producer_cond;
+int is_connfd_allowed;
+pthread_cond_t consumer_cond, producer_cond, close_connfd_allowed;
 pthread_mutex_t mutex;
 
 // shared queues of requests
@@ -34,10 +35,11 @@ void * thread_workload() {
         int connfd = dequeque(waiting_queue);
         enqueue(currently_executing_queue, connfd);
         pthread_mutex_unlock(&mutex);
-        printf("before handling req %d\n",connfd);
+
         // request handling of a thread shouldn't block the others
         requestHandle(connfd);
-        printf("thread finished handling req\n");
+        // signal producer that it can close the connfd
+        pthread_cond_signal(&close_connfd_allowed);
 
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
@@ -114,7 +116,9 @@ int main(int argc, char *argv[])
     // initialize condition and mutex
     pthread_cond_init(&producer_cond, NULL);
     pthread_cond_init(&consumer_cond, NULL);
+    pthread_cond_init(&close_connfd_allowed, NULL);
     pthread_mutex_init(&mutex, NULL);
+    is_connfd_allowed = 0;
 
     // create num_of_threads threads
     createThreadPool(thread_count);
@@ -125,7 +129,7 @@ int main(int argc, char *argv[])
     while (1) {
 	clientlen = sizeof(clientaddr);
 	connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *) &clientlen);
-    printf("got connfd, %d\n", connfd);
+    //printf("got connfd, %d\n", connfd);
 	// 
 	// HW3: In general, don't handle the request in the main thread.
 	// Save the relevant info in a buffer and have one of the worker threads 
@@ -133,10 +137,10 @@ int main(int argc, char *argv[])
 	// 
     /* Start multi-thread implementation */
 
+    // crititcal section
 	pthread_mutex_lock(&mutex);
 
-    // crititcal section
-
+	// part 2.0: check how to handle too many requests (more than specfied by max_queue_size in the command line
     switch(sched_alg_num) {
         case 0:
             // make sure waiting & currently_executing requests are less than queue size specified in cmd
@@ -166,12 +170,15 @@ int main(int argc, char *argv[])
     // signal all threads that a request has been added
     pthread_cond_broadcast(&consumer_cond);
 
-    pthread_mutex_unlock(&mutex);
-    printf("finished handling req\n");
+    while (is_connfd_allowed == 0) {
+        pthread_cond_wait(&close_connfd_allowed, &mutex);
+    }
 
+    Close(connfd);
+
+    pthread_mutex_unlock(&mutex);
     /* Done multi-thread implementation */
 
-	Close(connfd);
     }
     // should we also Close(listenfd);
     free(sched_alg);
