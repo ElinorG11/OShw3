@@ -95,6 +95,32 @@ void dequequeById(struct Queue *queue, int id) {
 
 }
 
+void dequequeByIndex(struct Queue *queue, int index) {
+    if(queue == NULL) return;
+
+    // Empty queue
+    if(queue->queue_size == 0) return;
+
+    struct Node *iterator = queue->head;
+    struct Node *prev_iterator = queue->head;
+
+    for (int i = 0; i < index; ++i) {
+        prev_iterator = iterator;
+        iterator = iterator->next;
+    }
+
+    // head is the required element
+    if(iterator == queue->head) {
+        queue->head = iterator->next;
+        free(iterator);
+        queue->queue_size--;
+    } else {
+        prev_iterator->next = iterator->next;
+        free(iterator);
+        queue->queue_size--;
+    }
+}
+
 void destroyQueue(struct Queue *queue) {
     struct Node *curr_iterator = queue->head;
     struct Node *prev_iterator = queue->head;

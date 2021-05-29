@@ -74,15 +74,28 @@ void getargs(int *port, int *thread_count, int *max_queue_size, char* sched_alg,
     }
 }
 
+int getSchedAlgNum(char *sched_alg) {
+    if(strcmp(sched_alg,"block") == 0) {
+        return 0;
+    } else if(strcmp(sched_alg,"dt") == 0){
+        return 1;
+    } else if(strcmp(sched_alg,"dh") == 0) {
+        return 2;
+    } else if(strcmp(sched_alg,"random") == 0) {
+        return 3;
+    }
+}
+
 
 int main(int argc, char *argv[])
 {
-    int listenfd, connfd, port, clientlen, thread_count, max_queue_size;
+    int listenfd, connfd, port, clientlen, thread_count, max_queue_size, drop_percentage;
     char *sched_alg = malloc(MAX_SCHED_ALG_SIZE);
     struct sockaddr_in clientaddr;
 
     getargs(&port, &thread_count, &max_queue_size, sched_alg, argc, argv);
 
+    int sched_alg_num = getSchedAlgNum(sched_alg);
 
     // 
     // HW3: Create some threads...
@@ -120,14 +133,30 @@ int main(int argc, char *argv[])
 	pthread_mutex_lock(&mutex);
 
     // crititcal section
-    // make sure waiting & currently_executing requests are less than queue size specified in cmd
-    while (waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size) {
-        pthread_cond_wait(&producer_cond, &mutex);
+
+    switch(sched_alg_num) {
+        case 0:
+            // make sure waiting & currently_executing requests are less than queue size specified in cmd
+            while (waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size) {
+                pthread_cond_wait(&producer_cond, &mutex);
+            }
+        case 1:
+            if(waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size){
+                Close(connfd);
+                pthread_mutex_unlock(&mutex);
+                continue;
+            }
+        case 2:
+            if(waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size){
+                dequeque(waiting_queue);
+            }
+        case 3:
+            drop_percentage = floor(waiting_queue->queue_size / 4);
+            for (int i = 0; i < drop_percentage; ++i) {
+                int index = rand() % drop_percentage;
+                dequequeByIndex(waiting_queue,index);
+            }
     }
-
-    switch(sched_alg):
-    case "block":
-
 
     // waiting queue size will be increased inside enqueue()
     enqueue(waiting_queue, connfd);
