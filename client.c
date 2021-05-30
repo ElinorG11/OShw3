@@ -86,13 +86,23 @@ int main(int argc, char *argv[])
   port = atoi(argv[2]);
   filename = argv[3];
 
+
   /* Open a single connection to the specified host and port */
   clientfd = Open_clientfd(host, port);
   
   clientSend(clientfd, filename);
   clientPrint(clientfd);
-    
+      
   Close(clientfd);
+
+  // Need to make this multi-threaded
+  int clientfd2 = Open_clientfd(host, port);
+  
+  // don't forget to add favourite.html by hand to public dir or else you'll spend hours debugging non-existing problem
+  clientSend(clientfd2, "favourite.html");
+  clientPrint(clientfd2);
+    
+  Close(clientfd2);
 
   exit(0);
 }

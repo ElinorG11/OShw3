@@ -38,8 +38,13 @@ void * thread_workload() {
 
         // request handling of a thread shouldn't block the others
         requestHandle(connfd);
+        
+        pthread_mutex_lock(&mutex);
+        // finished request handling - main thread may close connfd
+        is_connfd_allowed = 1;
         // signal producer that it can close the connfd
         pthread_cond_signal(&close_connfd_allowed);
+        pthread_mutex_unlock(&mutex);
 
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
@@ -173,6 +178,8 @@ int main(int argc, char *argv[])
     while (is_connfd_allowed == 0) {
         pthread_cond_wait(&close_connfd_allowed, &mutex);
     }
+    
+    is_connfd_allowed = 0;
 
     Close(connfd);
 
