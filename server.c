@@ -187,7 +187,8 @@ int main(int argc, char *argv[])
     /* Done multi-thread implementation */
 
     }
-    // should we also Close(listenfd);
+    // should we also Close(listenfd); ?
+    // should we also pthread_mutex_destroy(&mutex); ?
     free(sched_alg);
     destroyQueue(waiting_queue);
     destroyQueue(currently_executing_queue);
