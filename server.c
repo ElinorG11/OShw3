@@ -160,9 +160,14 @@ int main(int argc, char *argv[])
             }
         case 2:
             if(waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size){
+		// either check that waiting_queue->queue_size != 0 (but then, in case it is 0 we need to unlock() + continue so we won't 
+		// add this request in line 176. or, we can always add, and discard the head -> in this manner we will keep the apropriate size
+		// of both queues.
                 dequeque(waiting_queue);
             }
         case 3:
+	    // we need to check if waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size
+	    // also consider corner case where waiting_queue->queue_size == 0
             drop_percentage = floor(waiting_queue->queue_size / 4);
             for (int i = 0; i < drop_percentage; ++i) {
                 int index = rand() % drop_percentage;
@@ -187,8 +192,8 @@ int main(int argc, char *argv[])
     /* Done multi-thread implementation */
 
     }
-    // should we also Close(listenfd); ?
-    // should we also pthread_mutex_destroy(&mutex); ?
+    // should we also Close(listenfd); ? - No (reception hour)
+    // should we also pthread_mutex_destroy(&mutex); ? - Yes (reception hour)
     free(sched_alg);
     destroyQueue(waiting_queue);
     destroyQueue(currently_executing_queue);
