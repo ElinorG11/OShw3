@@ -1,0 +1,3 @@
+/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir
