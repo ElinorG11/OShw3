@@ -2,6 +2,7 @@
 #include "request.h"
 #include "queue.h" // we added this
 
+
 // server.c: A very, very simple web server
 //
 // To run:
@@ -14,8 +15,7 @@
 /* Implementing multi-threaded server */
 #define MAX_SCHED_ALG_SIZE 100
 
-int is_connfd_allowed;
-pthread_cond_t consumer_cond, producer_cond, close_connfd_allowed;
+pthread_cond_t consumer_cond, producer_cond;
 pthread_mutex_t mutex;
 
 // shared queues of requests
@@ -25,8 +25,12 @@ struct Queue *currently_executing_queue;
 void * thread_workload() {
     // after handling a specific request the thread continues waiting for new ones
     while(1) {
+
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
+
+        printf("thread pid: %ld\n", pthread_self());
+
         // variable queue_size is updated inside dequeue
         while (waiting_queue->queue_size == 0) {
             pthread_cond_wait(&consumer_cond, &mutex);
@@ -38,17 +42,11 @@ void * thread_workload() {
 
         // request handling of a thread shouldn't block the others
         requestHandle(connfd);
-        
-        pthread_mutex_lock(&mutex);
-        // finished request handling - main thread may close connfd
-        is_connfd_allowed = 1;
-        // signal producer that it can close the connfd
-        pthread_cond_signal(&close_connfd_allowed);
-        pthread_mutex_unlock(&mutex);
 
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
         dequequeById(currently_executing_queue, connfd);
+        Close(connfd);
         // send signal to producer in case que
         pthread_cond_signal(&producer_cond);
         pthread_mutex_unlock(&mutex);
@@ -121,9 +119,7 @@ int main(int argc, char *argv[])
     // initialize condition and mutex
     pthread_cond_init(&producer_cond, NULL);
     pthread_cond_init(&consumer_cond, NULL);
-    pthread_cond_init(&close_connfd_allowed, NULL);
     pthread_mutex_init(&mutex, NULL);
-    is_connfd_allowed = 0;
 
     // create num_of_threads threads
     createThreadPool(thread_count);
@@ -168,7 +164,7 @@ int main(int argc, char *argv[])
         case 3:
 	    // we need to check if waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size
 	    // also consider corner case where waiting_queue->queue_size == 0
-            drop_percentage = floor(waiting_queue->queue_size / 4);
+            drop_percentage = ceil(waiting_queue->queue_size / 4);
             for (int i = 0; i < drop_percentage; ++i) {
                 int index = rand() % drop_percentage;
                 dequequeByIndex(waiting_queue,index);
@@ -179,14 +175,6 @@ int main(int argc, char *argv[])
     enqueue(waiting_queue, connfd);
     // signal all threads that a request has been added
     pthread_cond_broadcast(&consumer_cond);
-
-    while (is_connfd_allowed == 0) {
-        pthread_cond_wait(&close_connfd_allowed, &mutex);
-    }
-    
-    is_connfd_allowed = 0;
-
-    Close(connfd);
 
     pthread_mutex_unlock(&mutex);
     /* Done multi-thread implementation */
