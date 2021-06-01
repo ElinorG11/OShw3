@@ -56,16 +56,22 @@ void clientPrint(int fd)
     n = Rio_readlineb(&rio, buf, MAXBUF);
   }
 }
+struct thread_arguments{
+    int fd;
+    char *filename;
+};
 
 /*
  * Send an HTTP request for the specified file
  */
 void * clientSend(void *parameters)
 {
-    int fd = *(int*)(parameters);
-    printf("fd = %d\n",fd);
-    char *filename = (char*)(parameters+sizeof(int));
-    printf("filename = %s\n",filename);
+    struct thread_arguments *thread_arguments = (struct thread_arguments*)parameters;
+    int fd = thread_arguments->fd;
+
+    char *filename = thread_arguments->filename;
+
+
     char buf[MAXLINE];
     char hostname[MAXLINE];
 
@@ -76,30 +82,29 @@ void * clientSend(void *parameters)
     sprintf(buf, "%shost: %s\n\r\n", buf, hostname);
     Rio_writen(fd, buf, strlen(buf));
     clientPrint(fd);
+    pthread_exit(0);
     Close(fd);
 }
 
-struct args{
-    int fd;
-    char *filename;
-};
 
-struct args *initArgs(int fd, char *filename){
-    struct args *args1 = malloc(sizeof(struct args));
+
+struct thread_arguments *initThreadArgs(int fd, char *filename){
+    struct thread_arguments *args1 = malloc(sizeof(struct thread_arguments));
     args1->fd = fd;
     args1->filename = filename;
     return args1;
 }
 
-void destroy(struct args *args) {
+void destroyThreadArgs(struct thread_arguments *args) {
     free(args);
 }
 
+
 int main(int argc, char *argv[])
 {
-  char *host, *filename;
+  char *host; //, *filename;
   int port;
-  int clientfd;
+  //int clientfd;
 
   if (argc != 4) {
     fprintf(stderr, "Usage: %s <host> <port> <filename>\n", argv[0]);
@@ -108,61 +113,79 @@ int main(int argc, char *argv[])
 
   host = argv[1];
   port = atoi(argv[2]);
-  filename = argv[3];
-  int N = 30;
-  char* filename2 = malloc(N);
-    strcpy(filename2,"home2.html");
-    char* filename3 = malloc(N);
-    strcpy(filename3,"home3.html");
+  //filename = argv[3];
 
-    char* filename4 = malloc(N);
-    strcpy(filename4,"home4.html");
+  // initialize variables
+  int array_size = 10;
+  int filename_size = 50;
 
-    char* filename5 = malloc(N);
-    strcpy(filename5,"home5.html");
+  printf("initialize arguments\n");
 
-    char* filename6 = malloc(N);
-    strcpy(filename6,"home6.html");
+  // create file name array
+  char* filename_array[array_size];
+    printf("died here\n");
+  for (int i = 0; i < array_size; ++i) {
+      filename_array[i] = malloc(filename_size);
+  }
+    printf("died here 2\n");
 
-    char* filename7 = malloc(N);
-    strcpy(filename7,"home7.html");
+  // create suffix
+  char* suffix = malloc(filename_size);
+  strcpy(suffix,".html");
 
-    char* filename8 = malloc(N);
-    strcpy(filename8,"home8.html");
+  char* number_str = malloc(filename_size);
 
-  int thread_count = 8;
-  pthread_t threads[thread_count];
+  for (int i = 0; i < array_size; ++i) {
+      // convert file name number into a string
+      sprintf(number_str, "%d", i);
+      printf("died here 3\n");
 
-    /* Open a single connection to the specified host and port */
-    clientfd = Open_clientfd(host, port);
-    int clientfd1 = Open_clientfd(host, port);
-    int clientfd2 = Open_clientfd(host, port);
-    int clientfd3 = Open_clientfd(host, port);
-    int clientfd4 = Open_clientfd(host, port);
-    int clientfd5 = Open_clientfd(host, port);
-    int clientfd6 = Open_clientfd(host, port);
-    int clientfd7 = Open_clientfd(host, port);
+      // concatenate all this mess
+      strcpy(filename_array[i],"home");
+      printf("died here 4\n");
 
-    struct args* params = initArgs(clientfd,filename);
-    struct args* params1 = initArgs(clientfd1,filename2);
-    struct args* params2 = initArgs(clientfd2,filename3);
-    struct args* params3 = initArgs(clientfd3,filename4);
-    struct args* params4 = initArgs(clientfd4,filename5);
-    struct args* params5 = initArgs(clientfd5,filename6);
-    struct args* params6 = initArgs(clientfd6,filename7);
-    struct args* params7 = initArgs(clientfd7,filename8);
+      strcat(filename_array[i],number_str);
+      printf("died here 5\n");
+      strcat(filename_array[i],suffix);
+      printf("died here 6\n");
+  }
 
-    pthread_create(&threads[0], NULL, clientSend, (void*)params);
-    pthread_create(&threads[1], NULL, clientSend, (void*)params1);
-    pthread_create(&threads[2], NULL, clientSend, (void*)params2);
-    pthread_create(&threads[3], NULL, clientSend, (void*)params3);
-    pthread_create(&threads[4], NULL, clientSend, (void*)params4);
-    pthread_create(&threads[5], NULL, clientSend, (void*)params5);
-    pthread_create(&threads[6], NULL, clientSend, (void*)params6);
-    pthread_create(&threads[7], NULL, clientSend, (void*)params7);
+  printf("created files array\n");
 
-  for (unsigned int i=0; i<thread_count; i++)
+  // create connection Fd's - should malloc?
+  int ConnFd[array_size];
+
+  for (int i = 0; i < array_size; ++i) {
+      ConnFd[i] = Open_clientfd(host, port);
+  }
+
+  printf("created Connection Fd's array\n");
+
+  // create parameters for clientSend function - should malloc?
+  struct thread_arguments* arguments_array[array_size];
+  for (int i = 0; i < array_size; ++i) {
+      arguments_array[i] = initThreadArgs(ConnFd[i],filename_array[i]);
+  }
+
+  printf("created parameters to function Client Send array\n");
+
+  // create threads
+  pthread_t threads[array_size];
+  for (unsigned int i=0; i<array_size; i++)
+      pthread_create(&threads[i], NULL, clientSend, (void*)arguments_array[i]);
+
+  printf("created threads array\n");
+
+  // wait for threads to finish
+  for (unsigned int i=0; i<array_size; i++)
       pthread_join(threads[i], NULL);
 
+  printf("finished join\n");
+
+  for (int i = 0; i < array_size; ++i) {
+      Close(ConnFd[i]);
+  }
+
+  printf("finished closing client Fd's\n");
   exit(0);
 }

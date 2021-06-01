@@ -29,7 +29,7 @@ void * thread_workload() {
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
 
-        printf("thread pid: %ld\n", pthread_self());
+
 
         // variable queue_size is updated inside dequeue
         while (waiting_queue->queue_size == 0) {
@@ -37,6 +37,7 @@ void * thread_workload() {
         }
         // get request from waiting queue
         int connfd = dequeque(waiting_queue);
+        printf("starting thread pid: %ld with connfd: %d\n", pthread_self(), connfd);
         enqueue(currently_executing_queue, connfd);
         pthread_mutex_unlock(&mutex);
 
@@ -46,9 +47,13 @@ void * thread_workload() {
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
         dequequeById(currently_executing_queue, connfd);
+
         Close(connfd);
         // send signal to producer in case que
         pthread_cond_signal(&producer_cond);
+
+        printf("Finished thread pid: %ld with connfd: %d\n", pthread_self(), connfd);
+
         pthread_mutex_unlock(&mutex);
     }
 }
@@ -66,6 +71,7 @@ void createThreadPool(int thread_count) {
 // HW3: Parse the new arguments too
 void getargs(int *port, int *thread_count, int *max_queue_size, char* sched_alg, int argc, char *argv[])
 {
+    // From Piazza - no need to check for errors. Thank god this is no MATAM
     if (argc < 5) {
 	fprintf(stderr, "Usage: %s <port>\n", argv[0]);
 	exit(1);
@@ -73,10 +79,7 @@ void getargs(int *port, int *thread_count, int *max_queue_size, char* sched_alg,
     *port = atoi(argv[1]);
     *thread_count = atoi(argv[2]);
     *max_queue_size = atoi(argv[3]);
-    // should check argument errors
-    if(strlen(argv[4]) < 100){
-        sched_alg = argv[4];
-    }
+    strcpy(sched_alg,argv[4]);
 }
 
 int getSchedAlgNum(char *sched_alg) {
@@ -101,11 +104,8 @@ int main(int argc, char *argv[])
 
     getargs(&port, &thread_count, &max_queue_size, sched_alg, argc, argv);
 
+    // we assume there won't be any error
     int sched_alg_num = getSchedAlgNum(sched_alg);
-
-    if(sched_alg_num == -1) {
-        // handle error
-    }
 
     // 
     // HW3: Create some threads...
@@ -148,6 +148,10 @@ int main(int argc, char *argv[])
             while (waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size) {
                 pthread_cond_wait(&producer_cond, &mutex);
             }
+            // waiting queue size will be increased inside enqueue()
+            enqueue(waiting_queue, connfd);
+            // signal all threads that a request has been added
+            pthread_cond_broadcast(&consumer_cond);
         case 1:
             if(waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size){
                 Close(connfd);
@@ -155,33 +159,63 @@ int main(int argc, char *argv[])
                 continue;
             }
         case 2:
+            // waiting queue size will be increased inside enqueue()
+            enqueue(waiting_queue, connfd);
             if(waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size){
-		// either check that waiting_queue->queue_size != 0 (but then, in case it is 0 we need to unlock() + continue so we won't 
-		// add this request in line 176. or, we can always add, and discard the head -> in this manner we will keep the apropriate size
-		// of both queues.
+            // either check that waiting_queue->queue_size != 0 (but then, in case it is 0 we need to unlock() + continue so we won't
+            // add this request in line 176. or, we can always add, and discard the head -> in this manner we will keep the apropriate size
+            // of both queues.
+                // dequeue request from head of the waiting list in case both queues are full
                 dequeque(waiting_queue);
+                // continue if waiting queue is empty
+                if(waiting_queue->queue_size == 0){
+                    continue;
+                }
             }
+            // now we're sure there's a new request in the waiting queue - let all the threads know
+            // signal all threads that a request has been added
+            pthread_cond_broadcast(&consumer_cond);
         case 3:
-	    // we need to check if waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size
-	    // also consider corner case where waiting_queue->queue_size == 0
-            drop_percentage = ceil(waiting_queue->queue_size / 4);
-            for (int i = 0; i < drop_percentage; ++i) {
-                int index = rand() % drop_percentage;
-                dequequeByIndex(waiting_queue,index);
+            // we need to check if waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size
+            // also consider corner case where waiting_queue->queue_size == 0
+
+            // waiting queue size will be increased inside enqueue()
+            enqueue(waiting_queue, connfd);
+
+            if(waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size){
+                // decrease 1 from queue size since we added the new request
+                drop_percentage = ceil((waiting_queue->queue_size - 1) / 4);
+                for (int i = 0; i < drop_percentage; ++i) {
+                    int index = rand() % drop_percentage;
+                    dequequeByIndex(waiting_queue,index);
+                }
             }
+
+            /* not sure whether we need to check this or not, but I think we can do it
+             * just to make sure we're not waking up threads when queue is empty
+             * */
+            if(waiting_queue->queue_size == 0) {
+                continue;
+            }
+
+            // now we're sure there's new waiting request
+            // signal all threads that a request has been added
+            pthread_cond_broadcast(&consumer_cond);
+
     }
 
+    // No need to enqueque & broadcast here, handled it in all the different cases.
     // waiting queue size will be increased inside enqueue()
-    enqueue(waiting_queue, connfd);
+    //enqueue(waiting_queue, connfd);
     // signal all threads that a request has been added
-    pthread_cond_broadcast(&consumer_cond);
+    //pthread_cond_broadcast(&consumer_cond);
 
     pthread_mutex_unlock(&mutex);
     /* Done multi-thread implementation */
 
     }
-    // should we also Close(listenfd); ? - No (reception hour)
-    // should we also pthread_mutex_destroy(&mutex); ? - Yes (reception hour)
+    // Close(listenfd);
+    pthread_mutex_destroy(&mutex);
     free(sched_alg);
     destroyQueue(waiting_queue);
     destroyQueue(currently_executing_queue);
