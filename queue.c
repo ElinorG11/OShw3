@@ -52,7 +52,7 @@ void enqueue(struct Queue *queue, int connfd) {
     }
     else {
         queue->end->next = node;
-        queue->end = queue->end->next;
+        queue->end = node;
     }
 
     queue->queue_size++;
