@@ -30,13 +30,21 @@ void * thread_workload() {
         pthread_mutex_lock(&mutex);
 
         // variable queue_size is updated inside dequeue
-        while (waiting_queue->queue_size == 0) {
+        while (waiting_queue == NULL || waiting_queue->queue_size == 0) {
             pthread_cond_wait(&consumer_cond, &mutex);
         }
         // get request from waiting queue
         int connfd = dequeque(waiting_queue);
         //printf("starting thread pid: %ld with connfd: %d\n", pthread_self(), connfd);
         enqueue(currently_executing_queue, connfd);
+
+        /*
+        printf("Print waiting requests connection Fd's\n");
+        printQueue(waiting_queue);
+        printf("Print currently executing requests connection Fd's\n");
+        printQueue(currently_executing_queue);
+        */
+
         pthread_mutex_unlock(&mutex);
 
         // request handling of a thread shouldn't block the others
@@ -152,11 +160,11 @@ int main(int argc, char *argv[])
             pthread_cond_broadcast(&consumer_cond);
             /* For debugging */
             /*
-             * printf("Print waiting requests connection Fd's\n");
-             * printQueue(waiting_queue);
-             * printf("Print currently executing requests connection Fd's\n");
-             * printQueue(currently_executing_queue);
-             * */
+             printf("Print waiting requests connection Fd's\n");
+             printQueue(waiting_queue);
+             printf("Print currently executing requests connection Fd's\n");
+             printQueue(currently_executing_queue);
+            */
             pthread_mutex_unlock(&mutex);
             break;
         case 1:
