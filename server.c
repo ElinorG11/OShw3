@@ -16,7 +16,7 @@
 #define MAX_SCHED_ALG_SIZE 100
 
 pthread_cond_t consumer_cond, producer_cond;
-pthread_mutex_t mutex;
+static pthread_mutex_t mutex;
 
 // shared queues of requests
 struct Queue *waiting_queue;
@@ -39,6 +39,7 @@ void * thread_workload() {
         enqueue(currently_executing_queue, connfd);
 
         /*
+        printf("thread No. = %ld\n",pthread_self());
         printf("Print waiting requests connection Fd's\n");
         printQueue(waiting_queue);
         printf("Print currently executing requests connection Fd's\n");
@@ -48,18 +49,28 @@ void * thread_workload() {
         pthread_mutex_unlock(&mutex);
 
         // request handling of a thread shouldn't block the others
+        printf("%d: Started handling\n", pthread_self());
         requestHandle(connfd);
+        printf("%d: Finish handling\n", pthread_self());
 
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
         dequequeById(currently_executing_queue, connfd);
+
+        /*
+        printf("thread No. = %ld\n",pthread_self());
+        printf("Print waiting requests connection Fd's\n");
+        printQueue(waiting_queue);
+        printf("Print currently executing requests connection Fd's\n");
+        printQueue(currently_executing_queue);
+        */
 
         Close(connfd);
         // send signal to producer in case que
         pthread_cond_signal(&producer_cond);
 
         //printf("Finished thread pid: %ld with connfd: %d\n", pthread_self(), connfd);
-
+        //printQueue(waiting_queue);
         pthread_mutex_unlock(&mutex);
     }
 }
@@ -134,13 +145,21 @@ int main(int argc, char *argv[])
 
     listenfd = Open_listenfd(port);
     while (1) {
+        pthread_mutex_lock(&mutex);
+        printf("main thread\n");
+        printf("Print waiting requests connection Fd's of size: %d\n", QueueSize(waiting_queue));
+        printQueue(waiting_queue);
+        printf("Print currently executing requests connection Fd's of size: %d\n", QueueSize(currently_executing_queue));
+        printQueue(currently_executing_queue);
+        pthread_mutex_unlock(&mutex);
+
 	clientlen = sizeof(clientaddr);
 	connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *) &clientlen);
     //printf("got connfd, %d\n", connfd);
 	// 
 	// HW3: In general, don't handle the request in the main thread.
 	// Save the relevant info in a buffer and have one of the worker threads 
-	// do the work. 
+	// do the work.
 	// 
     /* Start multi-thread implementation */
 

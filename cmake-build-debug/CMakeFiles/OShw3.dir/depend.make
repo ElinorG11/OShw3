@@ -8,6 +8,7 @@ CMakeFiles/OShw3.dir/output.c.o: ../output.c
 CMakeFiles/OShw3.dir/output.c.o: ../segel.h
 
 CMakeFiles/OShw3.dir/queue.c.o: ../queue.c
+CMakeFiles/OShw3.dir/queue.c.o: ../queue.h
 
 CMakeFiles/OShw3.dir/request.c.o: ../request.c
 CMakeFiles/OShw3.dir/request.c.o: ../request.h

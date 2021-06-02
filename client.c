@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
   //filename = argv[3];
 
   // initialize variables
-  int array_size = 10;
+  int array_size = 5;
   int filename_size = 50;
 
   //printf("initialize arguments\n");

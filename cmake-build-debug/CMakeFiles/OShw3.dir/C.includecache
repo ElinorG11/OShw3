@@ -7,24 +7,22 @@
 #IncludeRegexTransform: 
 
 /home/student/CLionProjects/OShw3/client.c
+pthread.h
+-
+string.h
+-
 segel.h
 /home/student/CLionProjects/OShw3/segel.h
-
-/home/student/CLionProjects/OShw3/output.c
-segel.h
-/home/student/CLionProjects/OShw3/segel.h
-sys/time.h
--
-assert.h
--
-unistd.h
--
 
 /home/student/CLionProjects/OShw3/queue.c
 stdio.h
 -
 stdlib.h
 -
+unistd.h
+-
+queue.h
+/home/student/CLionProjects/OShw3/queue.h
 
 /home/student/CLionProjects/OShw3/queue.h
 stdio.h
@@ -39,10 +37,6 @@ request.h
 /home/student/CLionProjects/OShw3/request.h
 
 /home/student/CLionProjects/OShw3/request.h
-
-/home/student/CLionProjects/OShw3/segel.c
-segel.h
-/home/student/CLionProjects/OShw3/segel.h
 
 /home/student/CLionProjects/OShw3/segel.h
 stdio.h
