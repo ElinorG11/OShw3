@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
              * printf("Print currently executing requests connection Fd's\n");
              * printQueue(currently_executing_queue);
              * */
-
+            pthread_mutex_unlock(&mutex);
             break;
         case 1:
             if(waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size){
