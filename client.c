@@ -69,6 +69,8 @@ void * clientSend(void *parameters)
     struct thread_arguments *thread_arguments = (struct thread_arguments*)parameters;
     int fd = thread_arguments->fd;
 
+    //printf("thread number = %ld prints connfd = %d\n", pthread_self(),fd);
+
     char *filename = thread_arguments->filename;
 
 
@@ -83,7 +85,7 @@ void * clientSend(void *parameters)
     Rio_writen(fd, buf, strlen(buf));
     clientPrint(fd);
     pthread_exit(0);
-    Close(fd);
+    //Close(fd);
 }
 
 
@@ -119,15 +121,15 @@ int main(int argc, char *argv[])
   int array_size = 10;
   int filename_size = 50;
 
-  printf("initialize arguments\n");
+  //printf("initialize arguments\n");
 
   // create file name array
   char* filename_array[array_size];
-    printf("died here\n");
+  //printf("died here\n");
   for (int i = 0; i < array_size; ++i) {
       filename_array[i] = malloc(filename_size);
   }
-    printf("died here 2\n");
+  //printf("died here 2\n");
 
   // create suffix
   char* suffix = malloc(filename_size);
@@ -138,19 +140,19 @@ int main(int argc, char *argv[])
   for (int i = 0; i < array_size; ++i) {
       // convert file name number into a string
       sprintf(number_str, "%d", i);
-      printf("died here 3\n");
+      //printf("died here 3\n");
 
       // concatenate all this mess
       strcpy(filename_array[i],"home");
-      printf("died here 4\n");
+      //printf("died here 4\n");
 
       strcat(filename_array[i],number_str);
-      printf("died here 5\n");
+      //printf("died here 5\n");
       strcat(filename_array[i],suffix);
-      printf("died here 6\n");
+      //printf("died here 6\n");
   }
 
-  printf("created files array\n");
+  //printf("created files array\n");
 
   // create connection Fd's - should malloc?
   int ConnFd[array_size];
@@ -159,7 +161,7 @@ int main(int argc, char *argv[])
       ConnFd[i] = Open_clientfd(host, port);
   }
 
-  printf("created Connection Fd's array\n");
+  //printf("created Connection Fd's array\n");
 
   // create parameters for clientSend function - should malloc?
   struct thread_arguments* arguments_array[array_size];
@@ -167,25 +169,26 @@ int main(int argc, char *argv[])
       arguments_array[i] = initThreadArgs(ConnFd[i],filename_array[i]);
   }
 
-  printf("created parameters to function Client Send array\n");
+  //printf("created parameters to function Client Send array\n");
 
   // create threads
   pthread_t threads[array_size];
   for (unsigned int i=0; i<array_size; i++)
       pthread_create(&threads[i], NULL, clientSend, (void*)arguments_array[i]);
 
-  printf("created threads array\n");
+  //printf("created threads array\n");
 
   // wait for threads to finish
   for (unsigned int i=0; i<array_size; i++)
       pthread_join(threads[i], NULL);
 
-  printf("finished join\n");
+  //printf("finished join\n");
 
   for (int i = 0; i < array_size; ++i) {
+      //printf("closing connfd = %d\n", ConnFd[i]);
       Close(ConnFd[i]);
   }
 
-  printf("finished closing client Fd's\n");
+  //printf("finished closing client Fd's\n");
   exit(0);
 }

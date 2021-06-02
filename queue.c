@@ -131,3 +131,18 @@ void destroyQueue(struct Queue *queue) {
     }
     free(queue);
 }
+
+void printQueue(struct Queue *queue) {
+    if(queue == NULL) return;
+    if(queue->queue_size == 0) {
+        printf("Queue is empty\n");
+        return;
+    }
+
+    struct Node *iterator = queue->head;
+
+    while (iterator != queue->end) {
+        printf("Connection Fd of current node is: %d\n", iterator->connfd);
+        iterator = iterator->next;
+    }
+}

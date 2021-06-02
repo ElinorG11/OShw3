@@ -29,15 +29,13 @@ void * thread_workload() {
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
 
-
-
         // variable queue_size is updated inside dequeue
         while (waiting_queue->queue_size == 0) {
             pthread_cond_wait(&consumer_cond, &mutex);
         }
         // get request from waiting queue
         int connfd = dequeque(waiting_queue);
-        printf("starting thread pid: %ld with connfd: %d\n", pthread_self(), connfd);
+        //printf("starting thread pid: %ld with connfd: %d\n", pthread_self(), connfd);
         enqueue(currently_executing_queue, connfd);
         pthread_mutex_unlock(&mutex);
 
@@ -52,7 +50,7 @@ void * thread_workload() {
         // send signal to producer in case que
         pthread_cond_signal(&producer_cond);
 
-        printf("Finished thread pid: %ld with connfd: %d\n", pthread_self(), connfd);
+        //printf("Finished thread pid: %ld with connfd: %d\n", pthread_self(), connfd);
 
         pthread_mutex_unlock(&mutex);
     }
@@ -152,11 +150,20 @@ int main(int argc, char *argv[])
             enqueue(waiting_queue, connfd);
             // signal all threads that a request has been added
             pthread_cond_broadcast(&consumer_cond);
+            /* For debugging */
+            /*
+             * printf("Print waiting requests connection Fd's\n");
+             * printQueue(waiting_queue);
+             * printf("Print currently executing requests connection Fd's\n");
+             * printQueue(currently_executing_queue);
+             * */
+
+            break;
         case 1:
             if(waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size){
                 Close(connfd);
                 pthread_mutex_unlock(&mutex);
-                continue;
+                break; // was continue; changed to break; to fit general structure
             }
         case 2:
             // waiting queue size will be increased inside enqueue()
@@ -175,6 +182,8 @@ int main(int argc, char *argv[])
             // now we're sure there's a new request in the waiting queue - let all the threads know
             // signal all threads that a request has been added
             pthread_cond_broadcast(&consumer_cond);
+            pthread_mutex_unlock(&mutex);
+            break;
         case 3:
             // we need to check if waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size
             // also consider corner case where waiting_queue->queue_size == 0
@@ -201,7 +210,10 @@ int main(int argc, char *argv[])
             // now we're sure there's new waiting request
             // signal all threads that a request has been added
             pthread_cond_broadcast(&consumer_cond);
-
+            pthread_mutex_unlock(&mutex);
+            break;
+        default:
+            break;
     }
 
     // No need to enqueque & broadcast here, handled it in all the different cases.
@@ -210,7 +222,11 @@ int main(int argc, char *argv[])
     // signal all threads that a request has been added
     //pthread_cond_broadcast(&consumer_cond);
 
-    pthread_mutex_unlock(&mutex);
+    /* got some problems since we need to use break; inside switch case (and we didn't)
+     * so to fit general structure each case will handle all of the actions required
+     * for a specific scheduling algorithm
+     * */
+    //pthread_mutex_unlock(&mutex);
     /* Done multi-thread implementation */
 
     }

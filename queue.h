@@ -17,3 +17,4 @@ int dequeque(struct Queue *queue);
 void dequequeById(struct Queue *queue, int id);
 void destroyQueue(struct Queue *queue);
 void dequequeByIndex(struct Queue *queue, int index);
+void printQueue(struct Queue *queue);
