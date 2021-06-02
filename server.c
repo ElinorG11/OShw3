@@ -16,7 +16,7 @@
 #define MAX_SCHED_ALG_SIZE 100
 
 pthread_cond_t consumer_cond, producer_cond;
-static pthread_mutex_t mutex;
+pthread_mutex_t mutex;
 
 // shared queues of requests
 struct Queue *waiting_queue;
@@ -25,10 +25,8 @@ struct Queue *currently_executing_queue;
 void * thread_workload() {
     // after handling a specific request the thread continues waiting for new ones
     while(1) {
-
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
-
         // variable queue_size is updated inside dequeue
         while (QueueSize(waiting_queue) == 0) {
             pthread_cond_wait(&consumer_cond, &mutex);
@@ -37,40 +35,22 @@ void * thread_workload() {
         int connfd = dequeque(waiting_queue);
         //printf("starting thread pid: %ld with connfd: %d\n", pthread_self(), connfd);
         enqueue(currently_executing_queue, connfd);
-
-        /*
-        printf("thread No. = %ld\n",pthread_self());
-        printf("Print waiting requests connection Fd's\n");
-        printQueue(waiting_queue);
-        printf("Print currently executing requests connection Fd's\n");
-        printQueue(currently_executing_queue);
-        */
-
         pthread_mutex_unlock(&mutex);
 
         // request handling of a thread shouldn't block the others
-        printf("%d: Started handling\n", pthread_self());
+        printf("%ld: Started handling\n", pthread_self());
         requestHandle(connfd);
-        printf("%d: Finish handling\n", pthread_self());
+        printf("%ld: Finish handling\n", pthread_self());
 
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
+        printf("%ld: Got lock\n", pthread_self());
         dequequeById(currently_executing_queue, connfd);
 
-        /*
-        printf("thread No. = %ld\n",pthread_self());
-        printf("Print waiting requests connection Fd's\n");
-        printQueue(waiting_queue);
-        printf("Print currently executing requests connection Fd's\n");
-        printQueue(currently_executing_queue);
-        */
-
         Close(connfd);
-        // send signal to producer in case que
+        // send signal to producer in case queue was full
         pthread_cond_signal(&producer_cond);
 
-        //printf("Finished thread pid: %ld with connfd: %d\n", pthread_self(), connfd);
-        //printQueue(waiting_queue);
         pthread_mutex_unlock(&mutex);
     }
 }
@@ -145,17 +125,10 @@ int main(int argc, char *argv[])
 
     listenfd = Open_listenfd(port);
     while (1) {
-        pthread_mutex_lock(&mutex);
-        printf("main thread\n");
-        printf("Print waiting requests connection Fd's of size: %d\n", QueueSize(waiting_queue));
-        printQueue(waiting_queue);
-        printf("Print currently executing requests connection Fd's of size: %d\n", QueueSize(currently_executing_queue));
-        printQueue(currently_executing_queue);
-        pthread_mutex_unlock(&mutex);
 
 	clientlen = sizeof(clientaddr);
 	connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *) &clientlen);
-    //printf("got connfd, %d\n", connfd);
+
 	// 
 	// HW3: In general, don't handle the request in the main thread.
 	// Save the relevant info in a buffer and have one of the worker threads 
@@ -163,10 +136,10 @@ int main(int argc, char *argv[])
 	// 
     /* Start multi-thread implementation */
 
-    // crititcal section
+    // critical section
 	pthread_mutex_lock(&mutex);
 
-	// part 2.0: check how to handle too many requests (more than specfied by max_queue_size in the command line
+	// part 2.0: check how to handle too many requests (more than specified by max_queue_size in the command line
     switch(sched_alg_num) {
         case 0:
             // make sure waiting & currently_executing requests are less than queue size specified in cmd
@@ -177,13 +150,6 @@ int main(int argc, char *argv[])
             enqueue(waiting_queue, connfd);
             // signal all threads that a request has been added
             pthread_cond_broadcast(&consumer_cond);
-            /* For debugging */
-            /*
-             printf("Print waiting requests connection Fd's\n");
-             printQueue(waiting_queue);
-             printf("Print currently executing requests connection Fd's\n");
-             printQueue(currently_executing_queue);
-            */
             pthread_mutex_unlock(&mutex);
             break;
         case 1:

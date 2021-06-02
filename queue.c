@@ -36,9 +36,9 @@ struct Queue *initQueue() {
 }
 
 void enqueue(struct Queue *queue, int connfd) {
-    printf("%d: Enqueue from with queue size of %d\n", getpid(), queue->queue_size);
-
     if(queue == NULL) return;
+
+    printf("%d: Enqueue from with queue size of %d\n", getpid(), queue->queue_size);
 
     struct Node *node = malloc(sizeof (struct Node));
     if(node == NULL) return;
@@ -99,27 +99,29 @@ void dequequeById(struct Queue *queue, int id) {
 
                 // if we have only one element and we remove it - we need to make sure to update end
                 if(queue->head == NULL){
-                    queue->end == queue->head;
+                    queue->end = queue->head;
                 }
                 free(iterator);
                 queue->queue_size--;
+                printf("queue size dequeueById: %d\n", queue->queue_size);
                 return;
             }
 
             prev_iterator->next = iterator->next;
             free(iterator);
             queue->queue_size--;
+            printf("queue size dequeueById: %d\n", queue->queue_size);
             return;
         }
 
         prev_iterator = iterator;
         iterator = iterator->next;
     }
-    printf("queue size dequeueById: %d\n", queue->queue_size);
+
 }
 
 void dequequeByIndex(struct Queue *queue, int index) {
-    printf("%d size before dequeue: %d\n", pthread_self(), queue->queue_size);
+
     if(queue == NULL) return;
 
     // Empty queue
@@ -139,8 +141,9 @@ void dequequeByIndex(struct Queue *queue, int index) {
 
         // if we have only one element and we remove it - we need to make sure to update end
         if(queue->head == NULL){
-            queue->end == queue->head;
+            queue->end = queue->head;
         }
+
         free(iterator);
         queue->queue_size--;
     } else {
