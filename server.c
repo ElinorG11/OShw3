@@ -30,7 +30,7 @@ void * thread_workload() {
         pthread_mutex_lock(&mutex);
 
         // variable queue_size is updated inside dequeue
-        while (waiting_queue == NULL || waiting_queue->queue_size == 0) {
+        while (QueueSize(waiting_queue) == 0) {
             pthread_cond_wait(&consumer_cond, &mutex);
         }
         // get request from waiting queue
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
     switch(sched_alg_num) {
         case 0:
             // make sure waiting & currently_executing requests are less than queue size specified in cmd
-            while (waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size) {
+            while (QueueSize(waiting_queue) + QueueSize(currently_executing_queue) >= max_queue_size) {
                 pthread_cond_wait(&producer_cond, &mutex);
             }
             // waiting queue size will be increased inside enqueue()
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
             pthread_mutex_unlock(&mutex);
             break;
         case 1:
-            if(waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size){
+            if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) >= max_queue_size){
                 Close(connfd);
                 pthread_mutex_unlock(&mutex);
                 break; // was continue; changed to break; to fit general structure
@@ -176,14 +176,14 @@ int main(int argc, char *argv[])
         case 2:
             // waiting queue size will be increased inside enqueue()
             enqueue(waiting_queue, connfd);
-            if(waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size){
+            if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) >= max_queue_size){
             // either check that waiting_queue->queue_size != 0 (but then, in case it is 0 we need to unlock() + continue so we won't
             // add this request in line 176. or, we can always add, and discard the head -> in this manner we will keep the apropriate size
             // of both queues.
                 // dequeue request from head of the waiting list in case both queues are full
                 dequeque(waiting_queue);
                 // continue if waiting queue is empty
-                if(waiting_queue->queue_size == 0){
+                if(QueueSize(waiting_queue) == 0){
                     continue;
                 }
             }
@@ -199,9 +199,9 @@ int main(int argc, char *argv[])
             // waiting queue size will be increased inside enqueue()
             enqueue(waiting_queue, connfd);
 
-            if(waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size){
+            if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) >= max_queue_size){
                 // decrease 1 from queue size since we added the new request
-                drop_percentage = ceil((waiting_queue->queue_size - 1) / 4);
+                drop_percentage = ceil((QueueSize(waiting_queue) - 1) / 4);
                 for (int i = 0; i < drop_percentage; ++i) {
                     int index = rand() % drop_percentage;
                     dequequeByIndex(waiting_queue,index);
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
             /* not sure whether we need to check this or not, but I think we can do it
              * just to make sure we're not waking up threads when queue is empty
              * */
-            if(waiting_queue->queue_size == 0) {
+            if(QueueSize(waiting_queue) == 0) {
                 continue;
             }
 

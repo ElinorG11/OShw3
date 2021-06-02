@@ -6,7 +6,7 @@ struct Node{
     int connfd;
     struct Node *next;
 };
-
+/*
 int getConnfd(struct Node *node){
     return node->connfd;
 }
@@ -14,6 +14,13 @@ int getConnfd(struct Node *node){
 struct Node * getNext(struct Node *node) {
     return node->next;
 }
+*/
+
+struct Queue{
+    struct Node *head;
+    struct Node *end;
+    int queue_size;
+};
 
 struct Queue *initQueue() {
     struct Queue *queue = malloc(sizeof(struct Queue));
@@ -121,15 +128,9 @@ void dequequeByIndex(struct Queue *queue, int index) {
     }
 }
 
-void destroyQueue(struct Queue *queue) {
-    struct Node *curr_iterator = queue->head;
-    struct Node *prev_iterator = queue->head;
-    while (curr_iterator != NULL) {
-        prev_iterator = curr_iterator;
-        curr_iterator = prev_iterator->next;
-        free(prev_iterator);
-    }
-    free(queue);
+int QueueSize(struct Queue *queue) {
+    if(queue == NULL) return 0;
+    return queue->queue_size;
 }
 
 void printQueue(struct Queue *queue) {
@@ -146,3 +147,16 @@ void printQueue(struct Queue *queue) {
         iterator = iterator->next;
     }
 }
+
+void destroyQueue(struct Queue *queue) {
+    struct Node *curr_iterator = queue->head;
+    struct Node *prev_iterator = queue->head;
+    while (curr_iterator != NULL) {
+        prev_iterator = curr_iterator;
+        curr_iterator = prev_iterator->next;
+        free(prev_iterator);
+    }
+    free(queue);
+}
+
+
