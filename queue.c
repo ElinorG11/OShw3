@@ -1,7 +1,6 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include "queue.h"
 
 struct Node{
@@ -38,7 +37,7 @@ struct Queue *initQueue() {
 void enqueue(struct Queue *queue, int connfd) {
     if(queue == NULL) return;
 
-    printf("%d: Enqueue from with queue size of %d\n", getpid(), queue->queue_size);
+    printf("%d: Enqueue from with queue size of %d\n", pthread_self(), queue->queue_size);
 
     struct Node *node = malloc(sizeof (struct Node));
     if(node == NULL) return;
