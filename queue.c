@@ -37,7 +37,8 @@ struct Queue *initQueue() {
 void enqueue(struct Queue *queue, int connfd) {
     if(queue == NULL) return;
 
-    printf("%d: Enqueue from with queue size of %d\n", pthread_self(), queue->queue_size);
+    printf("%ld: enqueue element: %d, initial queue size of %d\n", pthread_self(), connfd, queue->queue_size);
+
 
     struct Node *node = malloc(sizeof (struct Node));
     if(node == NULL) return;
@@ -56,6 +57,9 @@ void enqueue(struct Queue *queue, int connfd) {
     }
 
     queue->queue_size++;
+
+    printf("New list:\n");
+    printQueue(queue);
 }
 
 int dequeque(struct Queue *queue) {
@@ -77,12 +81,18 @@ int dequeque(struct Queue *queue) {
 
     queue->queue_size--;
 
-    printf("queue size dequeue: %d\n", queue->queue_size);
+    printf("%ld: after dequeue of element: %d final queue size: %d\n", pthread_self(),connfd,queue->queue_size);
+    printf("New list:\n");
+    printQueue(queue);
+
     return connfd;
 }
 
 void dequequeById(struct Queue *queue, int id) {
     if(queue == NULL) return;
+
+    printf("%ld: looking for id: %d. list before dequequeById:\n",pthread_self(),id);
+    printQueue(queue);
 
     // Empty queue
     if(queue->queue_size == 0) return;
@@ -100,16 +110,34 @@ void dequequeById(struct Queue *queue, int id) {
                 if(queue->head == NULL){
                     queue->end = queue->head;
                 }
+
                 free(iterator);
                 queue->queue_size--;
-                printf("queue size dequeueById: %d\n", queue->queue_size);
+
+                printf("%ld: queue size dequeueById: %d\n",pthread_self(), queue->queue_size);
+                printf("New list:\n");
+                printQueue(queue);
+
+                return;
+            }
+
+            // removing last element
+            if(iterator == queue->end) {
+                prev_iterator->next = iterator->next;
+                queue->end = prev_iterator;
+                free(iterator);
+                queue->queue_size--;
                 return;
             }
 
             prev_iterator->next = iterator->next;
             free(iterator);
             queue->queue_size--;
-            printf("queue size dequeueById: %d\n", queue->queue_size);
+
+            printf("%ld: queue size dequeueById: %d\n",pthread_self(), queue->queue_size);
+            printf("New list:\n");
+            printQueue(queue);
+
             return;
         }
 

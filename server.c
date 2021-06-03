@@ -31,20 +31,25 @@ void * thread_workload() {
         while (QueueSize(waiting_queue) == 0) {
             pthread_cond_wait(&consumer_cond, &mutex);
         }
+
+        printf("%ld: dequeue of waiting queue\n", pthread_self());
+
         // get request from waiting queue
         int connfd = dequeque(waiting_queue);
-        //printf("starting thread pid: %ld with connfd: %d\n", pthread_self(), connfd);
+
+        printf("%ld: enqueue to currently executing queue\n", pthread_self());
+
         enqueue(currently_executing_queue, connfd);
         pthread_mutex_unlock(&mutex);
 
         // request handling of a thread shouldn't block the others
-        printf("%ld: Started handling\n", pthread_self());
         requestHandle(connfd);
-        printf("%ld: Finish handling\n", pthread_self());
 
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
-        printf("%ld: Got lock\n", pthread_self());
+
+        printf("%ld: dequeue by Id of currently executing queue\n", pthread_self());
+
         dequequeById(currently_executing_queue, connfd);
 
         Close(connfd);
@@ -146,6 +151,9 @@ int main(int argc, char *argv[])
             while (QueueSize(waiting_queue) + QueueSize(currently_executing_queue) >= max_queue_size) {
                 pthread_cond_wait(&producer_cond, &mutex);
             }
+
+            printf("%ld: enqueue to waiting queue\n", pthread_self());
+
             // waiting queue size will be increased inside enqueue()
             enqueue(waiting_queue, connfd);
             // signal all threads that a request has been added
