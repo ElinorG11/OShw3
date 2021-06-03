@@ -7,19 +7,8 @@
 struct Node{
     int connfd;
     long req_arrival_time;
-    long req_dispatch_interval;
-    int thread_id;
     struct Node *next;
 };
-/*
-int getConnfd(struct Node *node){
-    return node->connfd;
-}
-
-struct Node * getNext(struct Node *node) {
-    return node->next;
-}
-*/
 
 struct Queue{
     struct Node *head;
@@ -52,8 +41,6 @@ void enqueue(struct Queue *queue, int connfd) {
     struct timeval start_time;
     gettimeofday(&start_time,NULL);
     node->req_arrival_time = (start_time.tv_sec) * 1000LL + (start_time.tv_usec) / 1000 ; // convert tv_sec & tv_usec to millisecond
-    node->req_dispatch_interval = -1;
-    node->thread_id = -1;
     node->next = NULL;
 
     // Empty list
@@ -230,32 +217,6 @@ void destroyQueue(struct Queue *queue) {
     free(queue);
 }
 
-void setDispatchInterval(struct Queue *queue, int connfd, long time) {
-    if(queue == NULL) return;
-
-    struct Node *iterator = queue->head;
-
-    while (iterator != NULL) {
-        if(iterator->connfd == connfd) {
-            iterator->req_dispatch_interval = iterator->req_arrival_time - time;
-        }
-        iterator = iterator->next;
-    }
-}
-
-long getDispatchInterval(struct Queue *queue, int connfd) {
-    if(queue == NULL) return -1;
-
-    struct Node *iterator = queue->head;
-
-    while (iterator != NULL) {
-        if(iterator->connfd == connfd) {
-            return iterator->req_dispatch_interval;
-        }
-        iterator = iterator->next;
-    }
-}
-
 long getArrivalTime(struct Queue *queue, int connfd) {
     if(queue == NULL) return -1;
 
@@ -267,6 +228,7 @@ long getArrivalTime(struct Queue *queue, int connfd) {
         }
         iterator = iterator->next;
     }
+    return -1;
 }
 
 
