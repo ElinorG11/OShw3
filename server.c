@@ -22,7 +22,14 @@ pthread_mutex_t mutex;
 struct Queue *waiting_queue;
 struct Queue *currently_executing_queue;
 
-void * thread_workload() {
+
+
+void * thread_workload(void * thread_id) {
+    pthread_mutex_lock(&mutex);
+    struct threadStat *thread_stat = malloc(sizeof (struct threadStat));
+    thread_stat->thread_id = (int)thread_id;
+    pthread_mutex_unlock(&mutex);
+
     // after handling a specific request the thread continues waiting for new ones
     while(1) {
         // executing critical section - accessing to shared queue
@@ -40,10 +47,21 @@ void * thread_workload() {
         printf("%ld: enqueue to currently executing queue\n", pthread_self());
 
         enqueue(currently_executing_queue, connfd);
+
+        // prepare arguments for statistics
+        long arrival_time = getArrivalTime(currently_executing_queue,connfd);
+
+        // get dispatch time
+        struct timeval start_time;
+        gettimeofday(&start_time,NULL);
+        long dispatch_interval = ((start_time.tv_sec) * 1000LL + (start_time.tv_usec) / 1000) - arrival_time; // convert tv_sec & tv_usec to millisecond
+
+        // setDispatchInterval(currently_executing_queue,connfd,dispatch_time);
+
         pthread_mutex_unlock(&mutex);
 
         // request handling of a thread shouldn't block the others
-        requestHandle(connfd);
+        requestHandle(connfd, thread_stat, dispatch_interval, arrival_time);
 
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
@@ -63,7 +81,7 @@ void * thread_workload() {
 void createThreadPool(int thread_count) {
     pthread_t threads[thread_count];
     for(int i=0; i<thread_count; i++) {
-        pthread_create(&threads[i], NULL, thread_workload, NULL);
+        pthread_create(&threads[i], NULL, thread_workload, (void*)i);
     }
     // Perhaps should store threads in list ?
 }
@@ -166,6 +184,12 @@ int main(int argc, char *argv[])
                 pthread_mutex_unlock(&mutex);
                 break; // was continue; changed to break; to fit general structure
             }
+            // waiting queue size will be increased inside enqueue()
+            enqueue(waiting_queue, connfd);
+            // signal all threads that a request has been added
+            pthread_cond_broadcast(&consumer_cond);
+            pthread_mutex_unlock(&mutex);
+            break;
         case 2:
             // waiting queue size will be increased inside enqueue()
             enqueue(waiting_queue, connfd);

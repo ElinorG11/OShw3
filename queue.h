@@ -15,3 +15,6 @@ void destroyQueue(struct Queue *queue);
 void dequequeByIndex(struct Queue *queue, int index);
 void printQueue(struct Queue *queue);
 int QueueSize(struct Queue *queue);
+void setDispatchInterval(struct Queue *queue, int connfd, long time);
+long getDispatchInterval(struct Queue *queue, int connfd);
+long getArrivalTime(struct Queue *queue, int connfd);

@@ -1,10 +1,14 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include "queue.h"
 
 struct Node{
     int connfd;
+    long req_arrival_time;
+    long req_dispatch_interval;
+    int thread_id;
     struct Node *next;
 };
 /*
@@ -44,6 +48,12 @@ void enqueue(struct Queue *queue, int connfd) {
     if(node == NULL) return;
 
     node->connfd = connfd;
+
+    struct timeval start_time;
+    gettimeofday(&start_time,NULL);
+    node->req_arrival_time = (start_time.tv_sec) * 1000LL + (start_time.tv_usec) / 1000 ; // convert tv_sec & tv_usec to millisecond
+    node->req_dispatch_interval = -1;
+    node->thread_id = -1;
     node->next = NULL;
 
     // Empty list
@@ -169,10 +179,19 @@ void dequequeByIndex(struct Queue *queue, int index) {
         // if we have only one element and we remove it - we need to make sure to update end
         if(queue->head == NULL){
             queue->end = queue->head;
+            free(iterator);
+            queue->queue_size--;
+            return;
         }
-
-        free(iterator);
-        queue->queue_size--;
+        
+        // removing last element
+		if(iterator == queue->end) {
+			prev_iterator->next = iterator->next;
+			queue->end = prev_iterator;
+			free(iterator);
+			queue->queue_size--;
+			return;
+		}
     } else {
         prev_iterator->next = iterator->next;
         free(iterator);
@@ -209,6 +228,45 @@ void destroyQueue(struct Queue *queue) {
         free(prev_iterator);
     }
     free(queue);
+}
+
+void setDispatchInterval(struct Queue *queue, int connfd, long time) {
+    if(queue == NULL) return;
+
+    struct Node *iterator = queue->head;
+
+    while (iterator != NULL) {
+        if(iterator->connfd == connfd) {
+            iterator->req_dispatch_interval = iterator->req_arrival_time - time;
+        }
+        iterator = iterator->next;
+    }
+}
+
+long getDispatchInterval(struct Queue *queue, int connfd) {
+    if(queue == NULL) return -1;
+
+    struct Node *iterator = queue->head;
+
+    while (iterator != NULL) {
+        if(iterator->connfd == connfd) {
+            return iterator->req_dispatch_interval;
+        }
+        iterator = iterator->next;
+    }
+}
+
+long getArrivalTime(struct Queue *queue, int connfd) {
+    if(queue == NULL) return -1;
+
+    struct Node *iterator = queue->head;
+
+    while (iterator != NULL) {
+        if(iterator->connfd == connfd) {
+            return iterator->req_arrival_time;
+        }
+        iterator = iterator->next;
+    }
 }
 
 
