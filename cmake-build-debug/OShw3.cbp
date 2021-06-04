@@ -87,6 +87,24 @@
 		<Unit filename="/home/student/CLionProjects/OShw3/client.c">
 			<Option target="OShw3"/>
 		</Unit>
+		<Unit filename="/home/student/CLionProjects/OShw3/clientDynamic.c">
+			<Option target="OShw3"/>
+		</Unit>
+		<Unit filename="/home/student/CLionProjects/OShw3/clientDynamic.h">
+			<Option target="OShw3"/>
+		</Unit>
+		<Unit filename="/home/student/CLionProjects/OShw3/clientError.c">
+			<Option target="OShw3"/>
+		</Unit>
+		<Unit filename="/home/student/CLionProjects/OShw3/clientError.h">
+			<Option target="OShw3"/>
+		</Unit>
+		<Unit filename="/home/student/CLionProjects/OShw3/clientStatic.c">
+			<Option target="OShw3"/>
+		</Unit>
+		<Unit filename="/home/student/CLionProjects/OShw3/clientStatic.h">
+			<Option target="OShw3"/>
+		</Unit>
 		<Unit filename="/home/student/CLionProjects/OShw3/output.c">
 			<Option target="OShw3"/>
 		</Unit>
@@ -109,6 +127,12 @@
 			<Option target="OShw3"/>
 		</Unit>
 		<Unit filename="/home/student/CLionProjects/OShw3/server.c">
+			<Option target="OShw3"/>
+		</Unit>
+		<Unit filename="/home/student/CLionProjects/OShw3/signals.c">
+			<Option target="OShw3"/>
+		</Unit>
+		<Unit filename="/home/student/CLionProjects/OShw3/signals.h">
 			<Option target="OShw3"/>
 		</Unit>
 		<Unit filename="/home/student/CLionProjects/OShw3/CMakeLists.txt">

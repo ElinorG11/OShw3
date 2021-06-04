@@ -169,6 +169,87 @@ client.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/client.c.s
 .PHONY : client.c.s
 
+clientDynamic.o: clientDynamic.c.o
+
+.PHONY : clientDynamic.o
+
+# target to build an object file
+clientDynamic.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/clientDynamic.c.o
+.PHONY : clientDynamic.c.o
+
+clientDynamic.i: clientDynamic.c.i
+
+.PHONY : clientDynamic.i
+
+# target to preprocess a source file
+clientDynamic.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/clientDynamic.c.i
+.PHONY : clientDynamic.c.i
+
+clientDynamic.s: clientDynamic.c.s
+
+.PHONY : clientDynamic.s
+
+# target to generate assembly for a file
+clientDynamic.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/clientDynamic.c.s
+.PHONY : clientDynamic.c.s
+
+clientError.o: clientError.c.o
+
+.PHONY : clientError.o
+
+# target to build an object file
+clientError.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/clientError.c.o
+.PHONY : clientError.c.o
+
+clientError.i: clientError.c.i
+
+.PHONY : clientError.i
+
+# target to preprocess a source file
+clientError.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/clientError.c.i
+.PHONY : clientError.c.i
+
+clientError.s: clientError.c.s
+
+.PHONY : clientError.s
+
+# target to generate assembly for a file
+clientError.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/clientError.c.s
+.PHONY : clientError.c.s
+
+clientStatic.o: clientStatic.c.o
+
+.PHONY : clientStatic.o
+
+# target to build an object file
+clientStatic.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/clientStatic.c.o
+.PHONY : clientStatic.c.o
+
+clientStatic.i: clientStatic.c.i
+
+.PHONY : clientStatic.i
+
+# target to preprocess a source file
+clientStatic.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/clientStatic.c.i
+.PHONY : clientStatic.c.i
+
+clientStatic.s: clientStatic.c.s
+
+.PHONY : clientStatic.s
+
+# target to generate assembly for a file
+clientStatic.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/clientStatic.c.s
+.PHONY : clientStatic.c.s
+
 output.o: output.c.o
 
 .PHONY : output.o
@@ -304,6 +385,33 @@ server.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/server.c.s
 .PHONY : server.c.s
 
+signals.o: signals.c.o
+
+.PHONY : signals.o
+
+# target to build an object file
+signals.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/signals.c.o
+.PHONY : signals.c.o
+
+signals.i: signals.c.i
+
+.PHONY : signals.i
+
+# target to preprocess a source file
+signals.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/signals.c.i
+.PHONY : signals.c.i
+
+signals.s: signals.c.s
+
+.PHONY : signals.s
+
+# target to generate assembly for a file
+signals.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/signals.c.s
+.PHONY : signals.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -316,6 +424,15 @@ help:
 	@echo "... client.o"
 	@echo "... client.i"
 	@echo "... client.s"
+	@echo "... clientDynamic.o"
+	@echo "... clientDynamic.i"
+	@echo "... clientDynamic.s"
+	@echo "... clientError.o"
+	@echo "... clientError.i"
+	@echo "... clientError.s"
+	@echo "... clientStatic.o"
+	@echo "... clientStatic.i"
+	@echo "... clientStatic.s"
 	@echo "... output.o"
 	@echo "... output.i"
 	@echo "... output.s"
@@ -331,6 +448,9 @@ help:
 	@echo "... server.o"
 	@echo "... server.i"
 	@echo "... server.s"
+	@echo "... signals.o"
+	@echo "... signals.i"
+	@echo "... signals.s"
 .PHONY : help
 
 

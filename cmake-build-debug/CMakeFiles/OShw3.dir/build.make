@@ -154,6 +154,58 @@ CMakeFiles/OShw3.dir/queue.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/OShw3.dir/queue.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/student/CLionProjects/OShw3/queue.c -o CMakeFiles/OShw3.dir/queue.c.s
 
+CMakeFiles/OShw3.dir/clientStatic.c.o: CMakeFiles/OShw3.dir/flags.make
+CMakeFiles/OShw3.dir/clientStatic.c.o: ../clientStatic.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building C object CMakeFiles/OShw3.dir/clientStatic.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/OShw3.dir/clientStatic.c.o -c /home/student/CLionProjects/OShw3/clientStatic.c
+
+CMakeFiles/OShw3.dir/clientStatic.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/OShw3.dir/clientStatic.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/student/CLionProjects/OShw3/clientStatic.c > CMakeFiles/OShw3.dir/clientStatic.c.i
+
+CMakeFiles/OShw3.dir/clientStatic.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/OShw3.dir/clientStatic.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/student/CLionProjects/OShw3/clientStatic.c -o CMakeFiles/OShw3.dir/clientStatic.c.s
+
+CMakeFiles/OShw3.dir/clientDynamic.c.o: CMakeFiles/OShw3.dir/flags.make
+CMakeFiles/OShw3.dir/clientDynamic.c.o: ../clientDynamic.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building C object CMakeFiles/OShw3.dir/clientDynamic.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/OShw3.dir/clientDynamic.c.o -c /home/student/CLionProjects/OShw3/clientDynamic.c
+
+CMakeFiles/OShw3.dir/clientDynamic.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/OShw3.dir/clientDynamic.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/student/CLionProjects/OShw3/clientDynamic.c > CMakeFiles/OShw3.dir/clientDynamic.c.i
+
+CMakeFiles/OShw3.dir/clientDynamic.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/OShw3.dir/clientDynamic.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/student/CLionProjects/OShw3/clientDynamic.c -o CMakeFiles/OShw3.dir/clientDynamic.c.s
+
+CMakeFiles/OShw3.dir/clientError.c.o: CMakeFiles/OShw3.dir/flags.make
+CMakeFiles/OShw3.dir/clientError.c.o: ../clientError.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building C object CMakeFiles/OShw3.dir/clientError.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/OShw3.dir/clientError.c.o -c /home/student/CLionProjects/OShw3/clientError.c
+
+CMakeFiles/OShw3.dir/clientError.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/OShw3.dir/clientError.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/student/CLionProjects/OShw3/clientError.c > CMakeFiles/OShw3.dir/clientError.c.i
+
+CMakeFiles/OShw3.dir/clientError.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/OShw3.dir/clientError.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/student/CLionProjects/OShw3/clientError.c -o CMakeFiles/OShw3.dir/clientError.c.s
+
+CMakeFiles/OShw3.dir/signals.c.o: CMakeFiles/OShw3.dir/flags.make
+CMakeFiles/OShw3.dir/signals.c.o: ../signals.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building C object CMakeFiles/OShw3.dir/signals.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/OShw3.dir/signals.c.o -c /home/student/CLionProjects/OShw3/signals.c
+
+CMakeFiles/OShw3.dir/signals.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/OShw3.dir/signals.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/student/CLionProjects/OShw3/signals.c > CMakeFiles/OShw3.dir/signals.c.i
+
+CMakeFiles/OShw3.dir/signals.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/OShw3.dir/signals.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/student/CLionProjects/OShw3/signals.c -o CMakeFiles/OShw3.dir/signals.c.s
+
 # Object files for target OShw3
 OShw3_OBJECTS = \
 "CMakeFiles/OShw3.dir/output.c.o" \
@@ -161,7 +213,11 @@ OShw3_OBJECTS = \
 "CMakeFiles/OShw3.dir/segel.c.o" \
 "CMakeFiles/OShw3.dir/server.c.o" \
 "CMakeFiles/OShw3.dir/client.c.o" \
-"CMakeFiles/OShw3.dir/queue.c.o"
+"CMakeFiles/OShw3.dir/queue.c.o" \
+"CMakeFiles/OShw3.dir/clientStatic.c.o" \
+"CMakeFiles/OShw3.dir/clientDynamic.c.o" \
+"CMakeFiles/OShw3.dir/clientError.c.o" \
+"CMakeFiles/OShw3.dir/signals.c.o"
 
 # External object files for target OShw3
 OShw3_EXTERNAL_OBJECTS =
@@ -172,9 +228,13 @@ OShw3: CMakeFiles/OShw3.dir/segel.c.o
 OShw3: CMakeFiles/OShw3.dir/server.c.o
 OShw3: CMakeFiles/OShw3.dir/client.c.o
 OShw3: CMakeFiles/OShw3.dir/queue.c.o
+OShw3: CMakeFiles/OShw3.dir/clientStatic.c.o
+OShw3: CMakeFiles/OShw3.dir/clientDynamic.c.o
+OShw3: CMakeFiles/OShw3.dir/clientError.c.o
+OShw3: CMakeFiles/OShw3.dir/signals.c.o
 OShw3: CMakeFiles/OShw3.dir/build.make
 OShw3: CMakeFiles/OShw3.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking C executable OShw3"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Linking C executable OShw3"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/OShw3.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

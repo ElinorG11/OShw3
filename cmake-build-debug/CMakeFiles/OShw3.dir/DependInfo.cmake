@@ -5,11 +5,15 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
   "/home/student/CLionProjects/OShw3/client.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/client.c.o"
+  "/home/student/CLionProjects/OShw3/clientDynamic.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/clientDynamic.c.o"
+  "/home/student/CLionProjects/OShw3/clientError.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/clientError.c.o"
+  "/home/student/CLionProjects/OShw3/clientStatic.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/clientStatic.c.o"
   "/home/student/CLionProjects/OShw3/output.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/output.c.o"
   "/home/student/CLionProjects/OShw3/queue.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/queue.c.o"
   "/home/student/CLionProjects/OShw3/request.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/request.c.o"
   "/home/student/CLionProjects/OShw3/segel.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/segel.c.o"
   "/home/student/CLionProjects/OShw3/server.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/server.c.o"
+  "/home/student/CLionProjects/OShw3/signals.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/signals.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 

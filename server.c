@@ -22,6 +22,9 @@ pthread_mutex_t mutex;
 struct Queue *waiting_queue;
 struct Queue *currently_executing_queue;
 
+// declare them as global variables so they can be accessed via signal handler
+int listenfd;
+char *sched_alg;
 
 
 void * thread_workload(void * thread_id) {
@@ -115,11 +118,35 @@ int getSchedAlgNum(char *sched_alg) {
     return -1;
 }
 
+void signal_handler(int signum){
+
+    //Return type of the handler function should be void
+
+    pthread_mutex_destroy(&mutex);
+    free(sched_alg);
+    destroyQueue(waiting_queue);
+    destroyQueue(currently_executing_queue);
+    exit(0);
+}
+
 
 int main(int argc, char *argv[])
 {
+    /*
     int listenfd, connfd, port, clientlen, thread_count, max_queue_size, drop_percentage;
     char *sched_alg = malloc(MAX_SCHED_ALG_SIZE);
+     */
+    if(signal(SIGTSTP , signal_handler)==SIG_ERR) {
+        perror("server error: failed to set ctrl-Z handler");
+        return 1;
+    }
+    if(signal(SIGINT , signal_handler)==SIG_ERR) {
+        perror("server error: failed to set ctrl-C handler");
+        return 1;
+    }
+
+    int connfd, port, clientlen, thread_count, max_queue_size, drop_percentage;
+    sched_alg = malloc(MAX_SCHED_ALG_SIZE);
     struct sockaddr_in clientaddr;
 
     getargs(&port, &thread_count, &max_queue_size, sched_alg, argc, argv);
