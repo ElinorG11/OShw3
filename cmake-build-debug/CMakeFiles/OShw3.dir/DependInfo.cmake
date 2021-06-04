@@ -13,7 +13,6 @@ set(CMAKE_DEPENDS_CHECK_C
   "/home/student/CLionProjects/OShw3/request.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/request.c.o"
   "/home/student/CLionProjects/OShw3/segel.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/segel.c.o"
   "/home/student/CLionProjects/OShw3/server.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/server.c.o"
-  "/home/student/CLionProjects/OShw3/signals.c" "/home/student/CLionProjects/OShw3/cmake-build-debug/CMakeFiles/OShw3.dir/signals.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 

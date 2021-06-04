@@ -124,6 +124,11 @@ void dequequeById(struct Queue *queue, int id) {
                 queue->end = prev_iterator;
                 free(iterator);
                 queue->queue_size--;
+
+                printf("%ld: queue size dequeueById: %d\n",pthread_self(), queue->queue_size);
+                printf("New list:\n");
+                printQueue(queue);
+
                 return;
             }
 

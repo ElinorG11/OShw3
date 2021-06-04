@@ -220,15 +220,17 @@ int main(int argc, char *argv[])
         case 2:
             // waiting queue size will be increased inside enqueue()
             enqueue(waiting_queue, connfd);
-            if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) >= max_queue_size){
+            if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) > max_queue_size){
             // either check that waiting_queue->queue_size != 0 (but then, in case it is 0 we need to unlock() + continue so we won't
             // add this request in line 176. or, we can always add, and discard the head -> in this manner we will keep the apropriate size
             // of both queues.
                 // dequeue request from head of the waiting list in case both queues are full
-                dequeque(waiting_queue);
-                // continue if waiting queue is empty
+                int conn_fd = dequeque(waiting_queue);
+                Close(conn_fd);
+                // continue if waiting queue was empty
                 if(QueueSize(waiting_queue) == 0){
-                    continue;
+                    pthread_mutex_unlock(&mutex);
+                    break;
                 }
             }
             // now we're sure there's a new request in the waiting queue - let all the threads know
@@ -248,7 +250,8 @@ int main(int argc, char *argv[])
                 drop_percentage = ceil((QueueSize(waiting_queue) - 1) / 4);
                 for (int i = 0; i < drop_percentage; ++i) {
                     int index = rand() % drop_percentage;
-                    dequequeByIndex(waiting_queue,index);
+                    dequequeByIndex(waiting_queue,index); // we should return the connfd here to close it
+                    // Close(conn_fd);
                 }
             }
 

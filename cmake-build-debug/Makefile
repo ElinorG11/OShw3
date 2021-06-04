@@ -385,33 +385,6 @@ server.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/server.c.s
 .PHONY : server.c.s
 
-signals.o: signals.c.o
-
-.PHONY : signals.o
-
-# target to build an object file
-signals.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/signals.c.o
-.PHONY : signals.c.o
-
-signals.i: signals.c.i
-
-.PHONY : signals.i
-
-# target to preprocess a source file
-signals.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/signals.c.i
-.PHONY : signals.c.i
-
-signals.s: signals.c.s
-
-.PHONY : signals.s
-
-# target to generate assembly for a file
-signals.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/OShw3.dir/build.make CMakeFiles/OShw3.dir/signals.c.s
-.PHONY : signals.c.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -448,9 +421,6 @@ help:
 	@echo "... server.o"
 	@echo "... server.i"
 	@echo "... server.s"
-	@echo "... signals.o"
-	@echo "... signals.i"
-	@echo "... signals.s"
 .PHONY : help
 
 
