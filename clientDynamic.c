@@ -88,7 +88,7 @@ void destroyThreadArgsDynamic(struct thread_arguments *args) {
 
 void testDynamic(char * host, int port) {
     // generate different client threads count
-    int NUMBER_OF_TESTS = 10;
+    int NUMBER_OF_TESTS = 1;
     int reqCount[NUMBER_OF_TESTS];
     for(int i=0; i<NUMBER_OF_TESTS; i++) {
         reqCount[i] = i+3;
@@ -96,7 +96,7 @@ void testDynamic(char * host, int port) {
 
     for (int j = 0; j < NUMBER_OF_TESTS; ++j) {
         // initialize variables
-        int array_size = reqCount[j];
+        int array_size = 100;
         int filename_size = 50;
 
         //printf("initialize arguments\n");

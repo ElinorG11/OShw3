@@ -73,7 +73,10 @@ void * thread_workload(void * thread_id) {
 
         dequequeById(currently_executing_queue, connfd);
 
+        printf("closing connfd: %d\n",connfd);
         Close(connfd);
+        printf("connfd: %d is closed\n",connfd);
+
         // send signal to producer in case queue was full
         pthread_cond_signal(&producer_cond);
 
@@ -209,6 +212,7 @@ int main(int argc, char *argv[])
             break;
         case 1:
             if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) >= max_queue_size){
+                printf("main thread closing connection: %d\n",connfd);
                 Close(connfd);
                 printf("queue is full closed connection: %d\n",connfd);
                 pthread_mutex_unlock(&mutex);
@@ -233,11 +237,11 @@ int main(int argc, char *argv[])
                 // dequeue request from head of the waiting list in case both queues are full
                 int conn_fd = dequeque(waiting_queue);
                 Close(conn_fd);
-                // continue if waiting queue was empty
-                if(QueueSize(waiting_queue) == 0){
-                    pthread_mutex_unlock(&mutex);
-                    break;
-                }
+            }
+            // continue if waiting queue was empty
+            if(QueueSize(waiting_queue) == 0){
+                pthread_mutex_unlock(&mutex);
+                break;
             }
             // now we're sure there's a new request in the waiting queue - let all the threads know
             // signal all threads that a request has been added

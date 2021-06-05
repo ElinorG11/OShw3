@@ -15,6 +15,7 @@
  */
 void clientPrintStatic(int fd)
 {
+    printf("send request for client %d\n", fd);
     rio_t rio;
     char buf[MAXBUF];
     int length = 0;
@@ -88,15 +89,16 @@ void destroyThreadArgsStatic(struct thread_arguments *args) {
 
 void testStatic(char * host, int port) {
     // generate different client threads count
-    int NUMBER_OF_TESTS = 10;
+    int NUMBER_OF_TESTS = 1;
     int reqCount[NUMBER_OF_TESTS];
     for(int i=0; i<NUMBER_OF_TESTS; i++) {
-        reqCount[i] = i+3;
+        reqCount[i] = i;
     }
 
     for (int j = 0; j < NUMBER_OF_TESTS; ++j) {
         // initialize variables
-        int array_size = reqCount[j];
+        //int array_size = reqCount[j];
+        int array_size = 100;
         int filename_size = 50;
 
         //printf("initialize arguments\n");

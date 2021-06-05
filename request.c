@@ -68,10 +68,17 @@ void requestReadhdrs(rio_t *rp)
 {
    char buf[MAXLINE];
 
-   Rio_readlineb(rp, buf, MAXLINE);
-   while (strcmp(buf, "\r\n")) {
-      Rio_readlineb(rp, buf, MAXLINE);
+   if(Rio_readlineb(rp, buf, MAXLINE) <= 0) {
+       printf("died in first rio\n");
    }
+    printf("almost done rio\n");
+   while (strcmp(buf, "\r\n")) {
+       //printf("inside while in rio\n");
+      if(Rio_readlineb(rp, buf, MAXLINE) <= 0){
+          //printf("died in second rio\n");
+      }
+   }
+
    return;
 }
 
@@ -194,6 +201,7 @@ void requestServeStatic(int fd, char *filename, int filesize, struct threadStat 
 // handle a request
 void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interval, long arrival_time)
 {
+    printf("starting request handle\n");
     thread_stat->count += 1;
 
    int is_static;
@@ -203,8 +211,12 @@ void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interva
    rio_t rio;
 
    Rio_readinitb(&rio, fd);
-   Rio_readlineb(&rio, buf, MAXLINE);
+   if(Rio_readlineb(&rio, buf, MAXLINE) <= 0) {
+       printf("Error in Rio_readlineb in reqHandle: %d\n",fd);
+   }
    sscanf(buf, "%s %s %s", method, uri, version);
+
+    printf("Thread reached here in req handle\n");
 
    printf("%s %s %s\n", method, uri, version);
 
@@ -213,12 +225,16 @@ void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interva
        printf("finished handling request: %d\n",fd);
       return;
    }
+    printf("Thread reached line 219 in req handle\n");
+
    requestReadhdrs(&rio);
+
+    printf("Thread reached line 221 in req handle\n");
 
    is_static = requestParseURI(uri, filename, cgiargs);
    if (stat(filename, &sbuf) < 0) {
       requestError(fd, filename, "404", "Not found", "OS-HW3 Server could not find this file",thread_stat,dispatch_interval,arrival_time);
-      printf("finished handling request: %d\n",fd);
+      printf("finished handling request in error 404: %d\n",fd);
       return;
    }
 
@@ -226,10 +242,11 @@ void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interva
        thread_stat->thread_static += 1;
       if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
          requestError(fd, filename, "403", "Forbidden", "OS-HW3 Server could not read this file",thread_stat,dispatch_interval,arrival_time);
-         printf("finished handling request: %d\n",fd);
+         printf("finished handling request in static error 403: %d\n",fd);
          return;
       }
       requestServeStatic(fd, filename, sbuf.st_size,thread_stat,dispatch_interval,arrival_time);
+       printf("finished handling request in static: %d\n",fd);
    } else {
        thread_stat->thread_dynamic += 1;
       if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
