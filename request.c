@@ -210,6 +210,7 @@ void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interva
 
    if (strcasecmp(method, "GET")) {
       requestError(fd, method, "501", "Not Implemented", "OS-HW3 Server does not implement this method",thread_stat,dispatch_interval,arrival_time);
+       printf("finished handling request: %d\n",fd);
       return;
    }
    requestReadhdrs(&rio);
@@ -217,6 +218,7 @@ void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interva
    is_static = requestParseURI(uri, filename, cgiargs);
    if (stat(filename, &sbuf) < 0) {
       requestError(fd, filename, "404", "Not found", "OS-HW3 Server could not find this file",thread_stat,dispatch_interval,arrival_time);
+      printf("finished handling request: %d\n",fd);
       return;
    }
 
@@ -224,6 +226,7 @@ void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interva
        thread_stat->thread_static += 1;
       if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
          requestError(fd, filename, "403", "Forbidden", "OS-HW3 Server could not read this file",thread_stat,dispatch_interval,arrival_time);
+         printf("finished handling request: %d\n",fd);
          return;
       }
       requestServeStatic(fd, filename, sbuf.st_size,thread_stat,dispatch_interval,arrival_time);
@@ -231,10 +234,12 @@ void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interva
        thread_stat->thread_dynamic += 1;
       if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
          requestError(fd, filename, "403", "Forbidden", "OS-HW3 Server could not run this CGI program",thread_stat,dispatch_interval,arrival_time);
+         printf("finished handling request: %d\n",fd);
          return;
       }
       requestServeDynamic(fd, filename, cgiargs,thread_stat,dispatch_interval,arrival_time);
    }
+   printf("finished handling request: %d\n",fd);
 }
 
 

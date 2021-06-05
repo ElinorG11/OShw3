@@ -77,6 +77,8 @@ void * thread_workload(void * thread_id) {
         // send signal to producer in case queue was full
         pthread_cond_signal(&producer_cond);
 
+        printf("thread No %ld, closed connection: %d\n", pthread_self(),connfd);
+
         pthread_mutex_unlock(&mutex);
     }
 }
@@ -208,9 +210,13 @@ int main(int argc, char *argv[])
         case 1:
             if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) >= max_queue_size){
                 Close(connfd);
+                printf("queue is full closed connection: %d\n",connfd);
                 pthread_mutex_unlock(&mutex);
                 break; // was continue; changed to break; to fit general structure
             }
+
+            printf("%ld: enqueue to waiting queue\n", pthread_self());
+
             // waiting queue size will be increased inside enqueue()
             enqueue(waiting_queue, connfd);
             // signal all threads that a request has been added
