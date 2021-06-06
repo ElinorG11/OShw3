@@ -202,7 +202,7 @@ void requestServeStatic(int fd, char *filename, int filesize, struct threadStat 
 void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interval, long arrival_time)
 {
     printf("starting request handle\n");
-    thread_stat->count += 1;
+    // Piazza: thread count should be updated only after we have FINISHED handling a request (i.e. right before returning from this function)
 
    int is_static;
    struct stat sbuf;
@@ -223,6 +223,7 @@ void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interva
    if (strcasecmp(method, "GET")) {
       requestError(fd, method, "501", "Not Implemented", "OS-HW3 Server does not implement this method",thread_stat,dispatch_interval,arrival_time);
        printf("finished handling request: %d\n",fd);
+      thread_stat->count += 1;
       return;
    }
     printf("Thread reached line 219 in req handle\n");
@@ -235,6 +236,7 @@ void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interva
    if (stat(filename, &sbuf) < 0) {
       requestError(fd, filename, "404", "Not found", "OS-HW3 Server could not find this file",thread_stat,dispatch_interval,arrival_time);
       printf("finished handling request in error 404: %d\n",fd);
+      thread_stat->count += 1;
       return;
    }
 
@@ -243,6 +245,7 @@ void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interva
       if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
          requestError(fd, filename, "403", "Forbidden", "OS-HW3 Server could not read this file",thread_stat,dispatch_interval,arrival_time);
          printf("finished handling request in static error 403: %d\n",fd);
+         thread_stat->count += 1;
          return;
       }
       requestServeStatic(fd, filename, sbuf.st_size,thread_stat,dispatch_interval,arrival_time);
@@ -252,11 +255,13 @@ void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interva
       if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
          requestError(fd, filename, "403", "Forbidden", "OS-HW3 Server could not run this CGI program",thread_stat,dispatch_interval,arrival_time);
          printf("finished handling request: %d\n",fd);
+         thread_stat->count += 1;
          return;
       }
       requestServeDynamic(fd, filename, cgiargs,thread_stat,dispatch_interval,arrival_time);
    }
    printf("finished handling request: %d\n",fd);
+   thread_stat->count += 1;
 }
 
 
