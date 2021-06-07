@@ -6,20 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/student/CLionProjects/OShw3/client.c
-pthread.h
--
-string.h
--
-segel.h
-/home/student/CLionProjects/OShw3/segel.h
-clientStatic.h
-/home/student/CLionProjects/OShw3/clientStatic.h
-clientDynamic.h
-/home/student/CLionProjects/OShw3/clientDynamic.h
-clientError.h
-/home/student/CLionProjects/OShw3/clientError.h
-
 /home/student/CLionProjects/OShw3/clientDynamic.c
 stdlib.h
 -
@@ -35,22 +21,6 @@ clientDynamic.h
 /home/student/CLionProjects/OShw3/clientDynamic.h
 
 /home/student/CLionProjects/OShw3/clientDynamic.h
-
-/home/student/CLionProjects/OShw3/clientError.c
-stdlib.h
--
-stdio.h
--
-pthread.h
--
-string.h
--
-segel.h
-/home/student/CLionProjects/OShw3/segel.h
-clientError.h
-/home/student/CLionProjects/OShw3/clientError.h
-
-/home/student/CLionProjects/OShw3/clientError.h
 
 /home/student/CLionProjects/OShw3/clientStatic.c
 stdlib.h
@@ -68,28 +38,6 @@ clientStatic.h
 
 /home/student/CLionProjects/OShw3/clientStatic.h
 
-/home/student/CLionProjects/OShw3/output.c
-segel.h
-/home/student/CLionProjects/OShw3/segel.h
-sys/time.h
--
-assert.h
--
-unistd.h
--
-
-/home/student/CLionProjects/OShw3/queue.c
-pthread.h
--
-stdio.h
--
-stdlib.h
--
-sys/time.h
--
-queue.h
-/home/student/CLionProjects/OShw3/queue.h
-
 /home/student/CLionProjects/OShw3/queue.h
 stdio.h
 -
@@ -103,10 +51,6 @@ request.h
 /home/student/CLionProjects/OShw3/request.h
 
 /home/student/CLionProjects/OShw3/request.h
-
-/home/student/CLionProjects/OShw3/segel.c
-segel.h
-/home/student/CLionProjects/OShw3/segel.h
 
 /home/student/CLionProjects/OShw3/segel.h
 stdio.h
