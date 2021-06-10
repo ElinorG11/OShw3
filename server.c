@@ -42,12 +42,12 @@ void * thread_workload(void * thread_id) {
             pthread_cond_wait(&consumer_cond, &mutex);
         }
 
-        printf("%ld: dequeue of waiting queue\n", pthread_self());
+        //printf("%ld: dequeue of waiting queue\n", pthread_self());
 
         // get request from waiting queue
         int connfd = dequeque(waiting_queue);
 
-        printf("%ld: enqueue to currently executing queue\n", pthread_self());
+        //printf("%ld: enqueue to currently executing queue\n", pthread_self());
 
         enqueue(currently_executing_queue, connfd);
 
@@ -75,12 +75,12 @@ void * thread_workload(void * thread_id) {
 
         printf("closing connfd: %d\n",connfd);
         Close(connfd);
-        printf("connfd: %d is closed\n",connfd);
+        //printf("connfd: %d is closed\n",connfd);
 
         // send signal to producer in case queue was full
         pthread_cond_signal(&producer_cond);
 
-        printf("thread No %ld, closed connection: %d\n", pthread_self(),connfd);
+        //printf("thread No %ld, closed connection: %d\n", pthread_self(),connfd);
 
         pthread_mutex_unlock(&mutex);
     }
@@ -97,7 +97,7 @@ void createThreadPool(int thread_count) {
 /* Done implementing multi-threaded server */
 
 // HW3: Parse the new arguments too
-void getargs(int *port, int *thread_count, int *max_queue_size, char* sched_alg, int argc, char *argv[])
+void getargs(int *port, int *thread_count, int *max_queue_size, int argc, char *argv[])
 {
     // From Piazza - no need to check for errors. Thank god this is no MATAM
     if (argc < 5) {
@@ -110,7 +110,7 @@ void getargs(int *port, int *thread_count, int *max_queue_size, char* sched_alg,
     strcpy(sched_alg,argv[4]);
 }
 
-int getSchedAlgNum(char *sched_alg) {
+int getSchedAlgNum() {
     if(strcmp(sched_alg,"block") == 0) {
         return 0;
     } else if(strcmp(sched_alg,"dt") == 0){
@@ -131,6 +131,7 @@ void signal_handler(int signum){
     free(sched_alg);
     destroyQueue(waiting_queue);
     destroyQueue(currently_executing_queue);
+    Close(listenfd);
     exit(0);
 }
 
@@ -154,10 +155,10 @@ int main(int argc, char *argv[])
     sched_alg = malloc(MAX_SCHED_ALG_SIZE);
     struct sockaddr_in clientaddr;
 
-    getargs(&port, &thread_count, &max_queue_size, sched_alg, argc, argv);
+    getargs(&port, &thread_count, &max_queue_size, argc, argv);
 
     // we assume there won't be any error
-    int sched_alg_num = getSchedAlgNum(sched_alg);
+    int sched_alg_num = getSchedAlgNum();
 
     // 
     // HW3: Create some threads...
@@ -255,13 +256,13 @@ int main(int argc, char *argv[])
             // waiting queue size will be increased inside enqueue()
             enqueue(waiting_queue, connfd);
 
-            if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) >= max_queue_size){
+            if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) > max_queue_size){
                 // decrease 1 from queue size since we added the new request
                 drop_percentage = ceil((QueueSize(waiting_queue) - 1) / 4);
                 for (int i = 0; i < drop_percentage; ++i) {
                     int index = rand() % drop_percentage;
-                    dequequeByIndex(waiting_queue,index); // we should return the connfd here to close it
-                    // Close(conn_fd);
+                    int conn_fd = dequequeByIndex(waiting_queue,index); // we should return the connfd here to close it
+                    Close(conn_fd);
                 }
             }
 

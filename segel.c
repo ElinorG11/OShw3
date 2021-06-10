@@ -7,7 +7,9 @@
 /* $begin unixerror */
 void unix_error(char *msg) /* unix-style error */
 {
-    fprintf(stderr, "%s: %s\n", msg, strerror(errno));
+    printf("FOR UNIX ERROR\n");
+    fprintf(stdout, "%s: %s\n", msg, strerror(errno));
+
     exit(0);
 }
 /* $end unixerror */
@@ -485,6 +487,7 @@ int open_clientfd(char *hostname, int port)
     /* Establish a connection with the server */
     if (connect(clientfd, (SA *) &serveraddr, sizeof(serveraddr)) < 0)
         return -1;
+
     return clientfd;
 }
 /* $end open_clientfd */
@@ -545,6 +548,7 @@ int Open_clientfd(char *hostname, int port)
         else        
             dns_error("Open_clientfd DNS error");
     }
+
     return rc;
 }
 

@@ -150,15 +150,17 @@ void requestServeDynamic(int fd, char *filename, char *cgiargs, struct threadSta
     sprintf(buf, "%sStat-thread-dynamic: %d\r\n", buf, thread_stat->thread_dynamic);
 
    Rio_writen(fd, buf, strlen(buf));
-
-   if (Fork() == 0) {
+    pid_t pid = Fork();
+   if (pid == 0) {
       /* Child process */
       Setenv("QUERY_STRING", cgiargs, 1);
       /* When the CGI process writes to stdout, it will instead go to the socket */
       Dup2(fd, STDOUT_FILENO);
       Execve(filename, emptylist, environ);
    }
-   Wait(NULL);
+   //Wait(NULL);
+   // Piazza: change Wait() to waitpid(): https://piazza.com/class/kmeyq2ecrv940z?cid=472
+   else waitpid(pid,NULL,NULL);
 }
 
 
@@ -211,9 +213,12 @@ void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interva
    rio_t rio;
 
    Rio_readinitb(&rio, fd);
+   printf("after Rio_readinitb in reqHandle: %d\n",fd);
+
    if(Rio_readlineb(&rio, buf, MAXLINE) <= 0) {
        printf("Error in Rio_readlineb in reqHandle: %d\n",fd);
    }
+    printf("Thread executed Rio_readlineb in req handle\n");
    sscanf(buf, "%s %s %s", method, uri, version);
 
     printf("Thread reached here in req handle\n");

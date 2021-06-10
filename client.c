@@ -75,6 +75,8 @@ void clientPrint(int fd)
     }
 }
 
+int NUM_OF_REQUESTS = 100;
+
 int main(int argc, char *argv[])
 {
   char *host, *filename;
@@ -90,22 +92,23 @@ int main(int argc, char *argv[])
   port = atoi(argv[2]);
   filename = argv[3];
 
-  printf("Running static tests\n");
-  testStatic(host,port);
+  //printf("Running static tests\n");
+  //testStatic(host,port);
   //printf("Running dynamic tests\n");
   //testDynamic(host,port);
   //printf("Running error tests\n");
   //testError(host,port);
 
   /* Open a single connection to the specified host and port */
-  /*
+
   clientfd = Open_clientfd(host, port);
 
   clientSend(clientfd, filename);
   clientPrint(clientfd);
 
   Close(clientfd);
-  */
+
+
 
   exit(0);
 }

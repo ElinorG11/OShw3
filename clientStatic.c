@@ -50,17 +50,19 @@ void clientPrintStatic(int fd)
 }
 struct thread_arguments{
     int threadId;
-    int fd;
+    char* host;
+    int port;
     char **files_names;
 };
 
 /*
  * Send an HTTP request for the specified file
  */
-void clientSendStatic(int fd, char *filename)
+void clientSendStatic(int port, char *host, char *filename)
 {
     char buf[MAXLINE];
     char hostname[MAXLINE];
+    int fd = Open_clientfd(host,port);
 
     Gethostname(hostname, MAXLINE);
 
@@ -75,28 +77,28 @@ void clientSendStatic(int fd, char *filename)
 
 void *clientSendStaticAux(void *parameters){
     struct thread_arguments *thread_arguments = (struct thread_arguments*)parameters;
-    int fd = thread_arguments->fd;
     for (int i = 0; i < MAX_THREAD_REQUESTS; ++i) {
-        clientSendStatic(fd,thread_arguments->files_names[i]);
+        clientSendStatic(thread_arguments->port,thread_arguments->host,thread_arguments->files_names[i]);
     }
     return NULL;
 }
 
-struct thread_arguments *initThreadArgsStatic(int thread_id, int fd, char *filename[]){
+struct thread_arguments *initThreadArgsStatic(int threadId, int port, char* host, char *filename[]){
     struct thread_arguments *args1 = malloc(sizeof(struct thread_arguments));
     if(args1 == NULL) {
         printf("Error Allocating argument parameters\n");
         return NULL;
     }
-    args1->threadId = thread_id;
-    args1->fd = fd;
+    args1->threadId = threadId;
+    args1->port = port;
+    args1->host = host;
     args1->files_names = malloc(MAX_THREAD_REQUESTS + 1);
     printf("died here\n");
 
     // each thread is responsible for files starting from (index = 20*thread_id + thread_id) -> (index + 20)
     // where thread_id = {0,1,2,...50}
     int counter = 0;
-    int index = (MAX_THREAD_REQUESTS+1)*thread_id;
+    int index = (MAX_THREAD_REQUESTS+1)*threadId;
     for (int i = index; i <= index + MAX_THREAD_REQUESTS; ++i) {
         args1->files_names[counter] = malloc(FILENAME_SIZE);
         strcpy(args1->files_names[counter],filename[i]);
@@ -151,25 +153,32 @@ void testStatic(char * host, int port) {
         //printf("died here 6\n");
     }
 
-    //printf("created files array\n");
+    free(suffix);
+    free(number_str);
 
-    // create connection Fd's
-    int ConnFd[NUMBER_OF_THREADS];
-
-    for (int i = 0; i < NUMBER_OF_THREADS; ++i) {
-        ConnFd[i] = Open_clientfd(host, port);
+    for (int i = 0; i < NUMBER_OF_REQUESTS; ++i) {
+        printf("file No %d is %s\n",i,filename_array[i]);
     }
 
-    //printf("created Connection Fd's array\n");
+    printf("created files array\n");
+
+    // create connection Fd's
+    /*
+    int ConnFd[NUMBER_OF_REQUESTS];
+
+    for (int i = 0; i < NUMBER_OF_REQUESTS; ++i) {
+        ConnFd[i] = Open_clientfd(host, port);
+        printf("created connection: %d\n",ConnFd[i]);
+    }
+
+    printf("created Connection Fd's array\n");
+    */
 
     // create parameters for clientSend function
     struct thread_arguments* arguments_array[NUMBER_OF_THREADS];
-    // -2 since there are 1200 requests, 50 threads -> each thread handles about 24 req.
-    // thread No 47 handles request No. 47*25 + 24 = 1199 => after 1200 we get SIGSEGV
-    // problem arises since threads handle disjoint set of requests, and I'm not really good at math so I
-    // chose the numbers of the constant above arbitrarily and just made sure I don't touch places in memory which doesn't belong to me
+
     for (int i = 0; i < NUMBER_OF_THREADS; ++i) {
-        arguments_array[i] = initThreadArgsStatic(i,ConnFd[i],filename_array);
+        arguments_array[i] = initThreadArgsStatic(i,port,host,filename_array);
     }
 
     printf("created parameters to function Client Send array\n");
@@ -185,14 +194,16 @@ void testStatic(char * host, int port) {
     for (unsigned int i=0; i<NUMBER_OF_THREADS; i++)
         pthread_join(threads[i], NULL);
 
-    //printf("finished join\n");
+    printf("finished join\n");
 
-    for (int i = 0; i < NUMBER_OF_THREADS; ++i) {
-        //printf("closing connfd = %d\n", ConnFd[i]);
+    /*
+    for (int i = 0; i < NUMBER_OF_REQUESTS; ++i) {
         Close(ConnFd[i]);
     }
 
-    printf("closed connections\n");
+     printf("closed connections\n");
+    */
+
 
     // I have double free for some reason, and I can't find it, which is extremely ANNOYING.
     for (int i = 0; i < NUMBER_OF_THREADS; ++i) {
