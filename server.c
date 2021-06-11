@@ -45,26 +45,24 @@ void * thread_workload(void * thread_id) {
         //printf("%ld: dequeue of waiting queue\n", pthread_self());
 
         // get request from waiting queue
+        struct timeval * arrival_time = getArrivalTimeByIndex(waiting_queue,0);
         int connfd = dequeque(waiting_queue);
 
         //printf("%ld: enqueue to currently executing queue\n", pthread_self());
 
-        enqueue(currently_executing_queue, connfd);
+        enqueue(currently_executing_queue, connfd, *arrival_time);
 
         // prepare arguments for statistics
-        long arrival_time = getArrivalTime(currently_executing_queue,connfd);
+        arrival_time = getArrivalTimeByConnFd(currently_executing_queue,connfd);
 
         // get dispatch time
-        struct timeval start_time;
-        gettimeofday(&start_time,NULL);
-        long dispatch_interval = ((start_time.tv_sec) * 1000LL + (start_time.tv_usec) / 1000) - arrival_time; // convert tv_sec & tv_usec to millisecond
-
-        // setDispatchInterval(currently_executing_queue,connfd,dispatch_time);
+        struct timeval dispatch_time;
+        gettimeofday(&dispatch_time,NULL);
 
         pthread_mutex_unlock(&mutex);
 
         // request handling of a thread shouldn't block the others
-        requestHandle(connfd, thread_stat, dispatch_interval, arrival_time);
+        requestHandle(connfd, thread_stat, dispatch_time, *(arrival_time));
 
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
@@ -184,6 +182,10 @@ int main(int argc, char *argv[])
 
 	clientlen = sizeof(clientaddr);
 	connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *) &clientlen);
+	
+	// get arrival time
+	struct timeval arrival_time;
+    gettimeofday(&arrival_time,NULL);
 
 	// 
 	// HW3: In general, don't handle the request in the main thread.
@@ -206,7 +208,7 @@ int main(int argc, char *argv[])
             printf("%ld: enqueue to waiting queue\n", pthread_self());
 
             // waiting queue size will be increased inside enqueue()
-            enqueue(waiting_queue, connfd);
+            enqueue(waiting_queue, connfd, arrival_time);
             // signal all threads that a request has been added
             pthread_cond_broadcast(&consumer_cond);
             pthread_mutex_unlock(&mutex);
@@ -223,14 +225,14 @@ int main(int argc, char *argv[])
             printf("%ld: enqueue to waiting queue\n", pthread_self());
 
             // waiting queue size will be increased inside enqueue()
-            enqueue(waiting_queue, connfd);
+            enqueue(waiting_queue, connfd, arrival_time);
             // signal all threads that a request has been added
             pthread_cond_broadcast(&consumer_cond);
             pthread_mutex_unlock(&mutex);
             break;
         case 2:
             // waiting queue size will be increased inside enqueue()
-            enqueue(waiting_queue, connfd);
+            enqueue(waiting_queue, connfd, arrival_time);
             if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) > max_queue_size){
             // either check that waiting_queue->queue_size != 0 (but then, in case it is 0 we need to unlock() + continue so we won't
             // add this request in line 176. or, we can always add, and discard the head -> in this manner we will keep the apropriate size
@@ -254,11 +256,12 @@ int main(int argc, char *argv[])
             // also consider corner case where waiting_queue->queue_size == 0
 
             // waiting queue size will be increased inside enqueue()
-            enqueue(waiting_queue, connfd);
+            enqueue(waiting_queue, connfd, arrival_time);
 
             if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) > max_queue_size){
-                // decrease 1 from queue size since we added the new request
-                drop_percentage = ceil((QueueSize(waiting_queue) - 1) / 4);
+                // decrease 1 from queue size since we have added the new request
+                int q_size = QueueSize(waiting_queue) - 1;
+				drop_percentage = (q_size/4) + ((q_size%4) != 0);
                 for (int i = 0; i < drop_percentage; ++i) {
                     int index = rand() % drop_percentage;
                     int conn_fd = dequequeByIndex(waiting_queue,index); // we should return the connfd here to close it

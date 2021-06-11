@@ -6,7 +6,7 @@
 
 struct Node{
     int connfd;
-    long req_arrival_time;
+    struct timeval req_arrival_time;
     struct Node *next;
 };
 
@@ -27,7 +27,7 @@ struct Queue *initQueue() {
     return queue;
 }
 
-void enqueue(struct Queue *queue, int connfd) {
+void enqueue(struct Queue *queue, int connfd, struct timeval arrival_time) {
     if(queue == NULL) return;
 
     printf("%ld: enqueue element: %d, initial queue size of %d\n", pthread_self(), connfd, queue->queue_size);
@@ -37,10 +37,7 @@ void enqueue(struct Queue *queue, int connfd) {
     if(node == NULL) return;
 
     node->connfd = connfd;
-
-    struct timeval start_time;
-    gettimeofday(&start_time,NULL);
-    node->req_arrival_time = (start_time.tv_sec) * 1000LL + (start_time.tv_usec) / 1000 ; // convert tv_sec & tv_usec to millisecond
+    node->req_arrival_time = arrival_time;
     node->next = NULL;
 
     // Empty list
@@ -167,32 +164,32 @@ int dequequeByIndex(struct Queue *queue, int index) {
 
     if(iterator != NULL) {
         fd = iterator->connfd;
-    }
 
-    // head is the required element
-    if(iterator == queue->head) {
-        queue->head = iterator->next;
+        // head is the required element
+        if(iterator == queue->head) {
+            queue->head = iterator->next;
 
-        // if we have only one element and we remove it - we need to make sure to update end
-        if(queue->head == NULL){
-            queue->end = queue->head;
+            // if we have only one element and we remove it - we need to make sure to update end
+            if(queue->head == NULL){
+                queue->end = queue->head;
+                free(iterator);
+                queue->queue_size--;
+                return fd;
+            }
+
+            // removing last element
+            if(iterator == queue->end) {
+                prev_iterator->next = iterator->next;
+                queue->end = prev_iterator;
+                free(iterator);
+                queue->queue_size--;
+                return fd;
+            }
+        } else {
+            prev_iterator->next = iterator->next;
             free(iterator);
             queue->queue_size--;
-            return fd;
         }
-        
-        // removing last element
-		if(iterator == queue->end) {
-			prev_iterator->next = iterator->next;
-			queue->end = prev_iterator;
-			free(iterator);
-			queue->queue_size--;
-			return fd;
-		}
-    } else {
-        prev_iterator->next = iterator->next;
-        free(iterator);
-        queue->queue_size--;
     }
     return fd;
 }
@@ -217,6 +214,32 @@ void printQueue(struct Queue *queue) {
     }
 }
 
+struct timeval *getArrivalTimeByConnFd(struct Queue *queue, int connfd) {
+    if(queue == NULL || queue->queue_size == 0) return NULL;
+
+    struct Node *iterator = queue->head;
+
+    while (iterator != NULL) {
+        if(iterator->connfd == connfd) {
+            return &(iterator->req_arrival_time);
+        }
+        iterator = iterator->next;
+    }
+    return NULL;
+}
+
+struct timeval *getArrivalTimeByIndex(struct Queue *queue, int index) {
+    if(queue == NULL || queue->queue_size == 0) return NULL;
+
+    struct Node *iterator = queue->head;
+
+    for (int i = 0; i < index; ++i) {
+        iterator = iterator->next;
+    }
+
+    return &(iterator->req_arrival_time);
+}
+
 void destroyQueue(struct Queue *queue) {
     struct Node *curr_iterator = queue->head;
     struct Node *prev_iterator = queue->head;
@@ -228,18 +251,6 @@ void destroyQueue(struct Queue *queue) {
     free(queue);
 }
 
-long getArrivalTime(struct Queue *queue, int connfd) {
-    if(queue == NULL) return -1;
 
-    struct Node *iterator = queue->head;
-
-    while (iterator != NULL) {
-        if(iterator->connfd == connfd) {
-            return iterator->req_arrival_time;
-        }
-        iterator = iterator->next;
-    }
-    return -1;
-}
 
 

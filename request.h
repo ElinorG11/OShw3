@@ -7,6 +7,6 @@ struct threadStat {
     int thread_dynamic;
 };
 
-void requestHandle(int fd, struct threadStat *thread_stat, long dispatch_interval, long arrival_time);
+void requestHandle(int fd, struct threadStat *thread_stat, struct timeval dispatch_time, struct timeval arrival_time);
 
 #endif
