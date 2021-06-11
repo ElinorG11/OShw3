@@ -45,24 +45,30 @@ void * thread_workload(void * thread_id) {
         //printf("%ld: dequeue of waiting queue\n", pthread_self());
 
         // get request from waiting queue
-        struct timeval * arrival_time = getArrivalTimeByIndex(waiting_queue,0);
+        struct timeval arrival_time;
+        gettimeofday(&arrival_time,NULL);
+        getArrivalTimeByIndex(waiting_queue,0,&arrival_time);
+
         int connfd = dequeque(waiting_queue);
 
         //printf("%ld: enqueue to currently executing queue\n", pthread_self());
 
-        enqueue(currently_executing_queue, connfd, *arrival_time);
+        enqueue(currently_executing_queue, connfd, arrival_time);
 
         // prepare arguments for statistics
-        arrival_time = getArrivalTimeByConnFd(currently_executing_queue,connfd);
+        getArrivalTimeByConnFd(currently_executing_queue,connfd,&arrival_time);
 
         // get dispatch time
         struct timeval dispatch_time;
         gettimeofday(&dispatch_time,NULL);
 
+        dispatch_time.tv_sec = dispatch_time.tv_sec - arrival_time.tv_sec;
+        dispatch_time.tv_usec = dispatch_time.tv_usec - arrival_time.tv_usec;
+
         pthread_mutex_unlock(&mutex);
 
         // request handling of a thread shouldn't block the others
-        requestHandle(connfd, thread_stat, dispatch_time, *(arrival_time));
+        requestHandle(connfd, thread_stat, &dispatch_time, &arrival_time);
 
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);

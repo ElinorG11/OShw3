@@ -6,7 +6,7 @@
 #include "request.h"
 
 // requestError(      fd,    filename,        "404",    "Not found", "OS-HW3 Server could not find this file");
-void requestError(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg, struct threadStat *thread_stat, struct timeval dispatch_time, struct timeval arrival_time)
+void requestError(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg, struct threadStat *thread_stat, struct timeval *dispatch_time, struct timeval *arrival_time)
 {
    char buf[MAXLINE], body[MAXBUF];
 
@@ -30,11 +30,11 @@ void requestError(int fd, char *cause, char *errnum, char *shortmsg, char *longm
    Rio_writen(fd, buf, strlen(buf));
    printf("%s", buf);
 
-    sprintf(buf, "Stat-req-arrival:: %lu.%06lu\r\n", arrival_time.tv_sec,arrival_time.tv_usec);
+    sprintf(buf, "Stat-req-arrival:: %lu.%06lu\r\n", arrival_time->tv_sec,arrival_time->tv_usec);
     Rio_writen(fd, buf, strlen(buf));
     printf("%s", buf);
 
-    sprintf(buf, "Stat-req-dispatch:: %lu.%06lu\r\n", dispatch_time.tv_sec - arrival_time.tv_sec,dispatch_time.tv_usec - arrival_time.tv_usec);
+    sprintf(buf, "Stat-req-dispatch:: %lu.%06lu\r\n", dispatch_time->tv_sec,dispatch_time->tv_usec);
     Rio_writen(fd, buf, strlen(buf));
     printf("%s", buf);
 
@@ -132,7 +132,7 @@ void requestGetFiletype(char *filename, char *filetype)
       strcpy(filetype, "text/plain");
 }
 
-void requestServeDynamic(int fd, char *filename, char *cgiargs, struct threadStat *thread_stat, struct timeval dispatch_time, struct timeval arrival_time)
+void requestServeDynamic(int fd, char *filename, char *cgiargs, struct threadStat *thread_stat, struct timeval *dispatch_time, struct timeval *arrival_time)
 {
    char buf[MAXLINE], *emptylist[] = {NULL};
 
@@ -141,8 +141,8 @@ void requestServeDynamic(int fd, char *filename, char *cgiargs, struct threadSta
    sprintf(buf, "HTTP/1.0 200 OK\r\n");
    sprintf(buf, "%sServer: OS-HW3 Web Server\r\n", buf);
 
-    sprintf(buf, "%sStat-req-arrival:: %lu.%06lu\r\n", buf, arrival_time.tv_sec,arrival_time.tv_usec);
-    sprintf(buf, "%sStat-req-dispatch:: %lu.%06lu\r\n", buf, dispatch_time.tv_sec - arrival_time.tv_sec,dispatch_time.tv_usec - arrival_time.tv_usec);
+    sprintf(buf, "%sStat-req-arrival:: %lu.%06lu\r\n", buf, arrival_time->tv_sec,arrival_time->tv_usec);
+    sprintf(buf, "%sStat-req-dispatch:: %lu.%06lu\r\n", buf, dispatch_time->tv_sec,dispatch_time->tv_usec);
 
     sprintf(buf, "%sStat-thread-id:: %d\r\n", buf, thread_stat->thread_id);
     sprintf(buf, "%sStat-thread-count:: %d\r\n", buf, thread_stat->count);
@@ -164,7 +164,7 @@ void requestServeDynamic(int fd, char *filename, char *cgiargs, struct threadSta
 }
 
 
-void requestServeStatic(int fd, char *filename, int filesize, struct threadStat *thread_stat, struct timeval dispatch_time, struct timeval arrival_time)
+void requestServeStatic(int fd, char *filename, int filesize, struct threadStat *thread_stat, struct timeval *dispatch_time, struct timeval *arrival_time)
 {
    int srcfd;
    char *srcp, filetype[MAXLINE], buf[MAXBUF];
@@ -184,8 +184,8 @@ void requestServeStatic(int fd, char *filename, int filesize, struct threadStat 
    sprintf(buf, "%sContent-Length: %d\r\n", buf, filesize);
    sprintf(buf, "%sContent-Type: %s\r\n", buf, filetype);
 
-    sprintf(buf, "%sStat-req-arrival:: %lu.%06lu\r\n", buf, arrival_time.tv_sec,arrival_time.tv_usec);
-    sprintf(buf, "%sStat-req-dispatch:: %lu.%06lu\r\n", buf, dispatch_time.tv_sec - arrival_time.tv_sec,dispatch_time.tv_usec - arrival_time.tv_usec);
+    sprintf(buf, "%sStat-req-arrival:: %lu.%06lu\r\n", buf, arrival_time->tv_sec,arrival_time->tv_usec);
+    sprintf(buf, "%sStat-req-dispatch:: %lu.%06lu\r\n", buf, dispatch_time->tv_sec,dispatch_time->tv_usec);
 
     sprintf(buf, "%sStat-thread-id:: %d\r\n", buf, thread_stat->thread_id);
     sprintf(buf, "%sStat-thread-count:: %d\r\n", buf, thread_stat->count);
@@ -201,7 +201,7 @@ void requestServeStatic(int fd, char *filename, int filesize, struct threadStat 
 }
 
 // handle a request
-void requestHandle(int fd, struct threadStat *thread_stat, struct timeval dispatch_time, struct timeval arrival_time)
+void requestHandle(int fd, struct threadStat *thread_stat, struct timeval *dispatch_time, struct timeval *arrival_time)
 {
     printf("starting request handle\n");
     // Piazza: thread count should be updated only after we have FINISHED handling a request (i.e. right before returning from this function)
@@ -229,6 +229,12 @@ void requestHandle(int fd, struct threadStat *thread_stat, struct timeval dispat
       requestError(fd, method, "501", "Not Implemented", "OS-HW3 Server does not implement this method",thread_stat,dispatch_time,arrival_time);
        printf("finished handling request: %d\n",fd);
       thread_stat->count += 1;
+      // From Piazza: thread_count = thread_static + thread_dynamic
+      if(requestParseURI(uri, filename, cgiargs)) {
+          thread_stat->thread_static += 1;
+      } else {
+          thread_stat->thread_dynamic += 1;
+      }
       return;
    }
     printf("Thread reached line 219 in req handle\n");
@@ -242,6 +248,11 @@ void requestHandle(int fd, struct threadStat *thread_stat, struct timeval dispat
       requestError(fd, filename, "404", "Not found", "OS-HW3 Server could not find this file",thread_stat,dispatch_time,arrival_time);
       printf("finished handling request in error 404: %d\n",fd);
       thread_stat->count += 1;
+       if(requestParseURI(uri, filename, cgiargs)) {
+           thread_stat->thread_static += 1;
+       } else {
+           thread_stat->thread_dynamic += 1;
+       }
       return;
    }
 

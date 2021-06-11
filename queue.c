@@ -214,22 +214,22 @@ void printQueue(struct Queue *queue) {
     }
 }
 
-struct timeval *getArrivalTimeByConnFd(struct Queue *queue, int connfd) {
-    if(queue == NULL || queue->queue_size == 0) return NULL;
+void getArrivalTimeByConnFd(struct Queue *queue, int connfd, struct timeval *arrival_time) {
+    if(queue == NULL || queue->queue_size == 0) return;
 
     struct Node *iterator = queue->head;
 
     while (iterator != NULL) {
         if(iterator->connfd == connfd) {
-            return &(iterator->req_arrival_time);
+            *arrival_time = iterator->req_arrival_time;
         }
         iterator = iterator->next;
     }
-    return NULL;
+    return;
 }
 
-struct timeval *getArrivalTimeByIndex(struct Queue *queue, int index) {
-    if(queue == NULL || queue->queue_size == 0) return NULL;
+void getArrivalTimeByIndex(struct Queue *queue, int index, struct timeval *arrival_time) {
+    if(queue == NULL || queue->queue_size == 0) return;
 
     struct Node *iterator = queue->head;
 
@@ -237,7 +237,7 @@ struct timeval *getArrivalTimeByIndex(struct Queue *queue, int index) {
         iterator = iterator->next;
     }
 
-    return &(iterator->req_arrival_time);
+    *arrival_time = iterator->req_arrival_time;
 }
 
 void destroyQueue(struct Queue *queue) {
