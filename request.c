@@ -8,6 +8,7 @@
 // requestError(      fd,    filename,        "404",    "Not found", "OS-HW3 Server could not find this file");
 void requestError(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg, struct threadStat *thread_stat, struct timeval *dispatch_time, struct timeval *arrival_time)
 {
+    fprintf(stderr,"Got an Error\n");
    char buf[MAXLINE], body[MAXBUF];
 
    // Create the body of the error message
@@ -69,9 +70,9 @@ void requestReadhdrs(rio_t *rp)
    char buf[MAXLINE];
 
    if(Rio_readlineb(rp, buf, MAXLINE) <= 0) {
-       printf("died in first rio\n");
+       //printf("died in first rio\n");
    }
-    printf("almost done rio\n");
+    //printf("almost done rio\n");
    while (strcmp(buf, "\r\n")) {
        //printf("inside while in rio\n");
       if(Rio_readlineb(rp, buf, MAXLINE) <= 0){
@@ -203,7 +204,8 @@ void requestServeStatic(int fd, char *filename, int filesize, struct threadStat 
 // handle a request
 void requestHandle(int fd, struct threadStat *thread_stat, struct timeval *dispatch_time, struct timeval *arrival_time)
 {
-    printf("starting request handle\n");
+    //printf("starting request handle\n");
+
     // Piazza: thread count should be updated only after we have FINISHED handling a request (i.e. right before returning from this function)
 
    int is_static;
@@ -213,21 +215,22 @@ void requestHandle(int fd, struct threadStat *thread_stat, struct timeval *dispa
    rio_t rio;
 
    Rio_readinitb(&rio, fd);
-   printf("after Rio_readinitb in reqHandle: %d\n",fd);
+   //printf("after Rio_readinitb in reqHandle: %d\n",fd);
 
    if(Rio_readlineb(&rio, buf, MAXLINE) <= 0) {
-       printf("Error in Rio_readlineb in reqHandle: %d\n",fd);
+       //printf("Error in Rio_readlineb in reqHandle: %d\n",fd);
    }
-    printf("Thread executed Rio_readlineb in req handle\n");
+    //printf("Thread executed Rio_readlineb in req handle\n");
    sscanf(buf, "%s %s %s", method, uri, version);
 
-    printf("Thread reached here in req handle\n");
+    //printf("Thread reached here in req handle\n");
 
-   printf("%s %s %s\n", method, uri, version);
+    // For Debugging: Don't forget to uncomment - it's theirs and we commented it only for dubegging
+   //printf("%s %s %s\n", method, uri, version);
 
    if (strcasecmp(method, "GET")) {
       requestError(fd, method, "501", "Not Implemented", "OS-HW3 Server does not implement this method",thread_stat,dispatch_time,arrival_time);
-       printf("finished handling request: %d\n",fd);
+       //printf("finished handling request: %d\n",fd);
       thread_stat->count += 1;
       // From Piazza: thread_count = thread_static + thread_dynamic
       if(requestParseURI(uri, filename, cgiargs)) {
@@ -237,16 +240,16 @@ void requestHandle(int fd, struct threadStat *thread_stat, struct timeval *dispa
       }
       return;
    }
-    printf("Thread reached line 219 in req handle\n");
+    //printf("Thread reached line 219 in req handle\n");
 
    requestReadhdrs(&rio);
 
-    printf("Thread reached line 221 in req handle\n");
+    //printf("Thread reached line 221 in req handle\n");
 
    is_static = requestParseURI(uri, filename, cgiargs);
    if (stat(filename, &sbuf) < 0) {
       requestError(fd, filename, "404", "Not found", "OS-HW3 Server could not find this file",thread_stat,dispatch_time,arrival_time);
-      printf("finished handling request in error 404: %d\n",fd);
+      //printf("finished handling request in error 404: %d\n",fd);
       thread_stat->count += 1;
        if(requestParseURI(uri, filename, cgiargs)) {
            thread_stat->thread_static += 1;
@@ -260,23 +263,23 @@ void requestHandle(int fd, struct threadStat *thread_stat, struct timeval *dispa
        thread_stat->thread_static += 1;
       if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
          requestError(fd, filename, "403", "Forbidden", "OS-HW3 Server could not read this file",thread_stat,dispatch_time,arrival_time);
-         printf("finished handling request in static error 403: %d\n",fd);
+         //printf("finished handling request in static error 403: %d\n",fd);
          thread_stat->count += 1;
          return;
       }
       requestServeStatic(fd, filename, sbuf.st_size,thread_stat,dispatch_time,arrival_time);
-       printf("finished handling request in static: %d\n",fd);
+       //printf("finished handling request in static: %d\n",fd);
    } else {
        thread_stat->thread_dynamic += 1;
       if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
          requestError(fd, filename, "403", "Forbidden", "OS-HW3 Server could not run this CGI program",thread_stat,dispatch_time,arrival_time);
-         printf("finished handling request: %d\n",fd);
+         //printf("finished handling request: %d\n",fd);
          thread_stat->count += 1;
          return;
       }
       requestServeDynamic(fd, filename, cgiargs,thread_stat,dispatch_time,arrival_time);
    }
-   printf("finished handling request: %d\n",fd);
+   //printf("finished handling request: %d\n",fd);
    thread_stat->count += 1;
 }
 
