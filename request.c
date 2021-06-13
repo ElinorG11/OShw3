@@ -31,13 +31,13 @@ void requestError(int fd, char *cause, char *errnum, char *shortmsg, char *longm
    Rio_writen(fd, buf, strlen(buf));
    printf("%s", buf);
 
-    sprintf(buf, "Stat-req-arrival:: %lu.%06lu\r\n", arrival_time->tv_sec,arrival_time->tv_usec);
-    Rio_writen(fd, buf, strlen(buf));
-    printf("%s", buf);
+   sprintf(buf, "Stat-Req-Arrival:: %lu.%06lu\r\n", arrival_time->tv_sec,arrival_time->tv_usec);
+   Rio_writen(fd, buf, strlen(buf));
+   printf("%s", buf);
 
-    sprintf(buf, "Stat-req-dispatch:: %lu.%06lu\r\n", dispatch_time->tv_sec,dispatch_time->tv_usec);
-    Rio_writen(fd, buf, strlen(buf));
-    printf("%s", buf);
+   sprintf(buf, "Stat-req-dispatch:: %lu.%06lu\r\n", dispatch_time->tv_sec,dispatch_time->tv_usec);
+   Rio_writen(fd, buf, strlen(buf));
+   printf("%s", buf);
 
    sprintf(buf, "Stat-thread-id:: %d\r\n", thread_stat->thread_id);
    Rio_writen(fd, buf, strlen(buf));
@@ -67,20 +67,13 @@ void requestError(int fd, char *cause, char *errnum, char *shortmsg, char *longm
 //
 void requestReadhdrs(rio_t *rp)
 {
-   char buf[MAXLINE];
+    char buf[MAXLINE];
 
-   if(Rio_readlineb(rp, buf, MAXLINE) <= 0) {
-       //printf("died in first rio\n");
-   }
-    //printf("almost done rio\n");
-   while (strcmp(buf, "\r\n")) {
-       //printf("inside while in rio\n");
-      if(Rio_readlineb(rp, buf, MAXLINE) <= 0){
-          //printf("died in second rio\n");
-      }
-   }
-
-   return;
+    Rio_readlineb(rp, buf, MAXLINE);
+    while (strcmp(buf, "\r\n")) {
+        Rio_readlineb(rp, buf, MAXLINE);
+    }
+    return;
 }
 
 //
@@ -148,20 +141,19 @@ void requestServeDynamic(int fd, char *filename, char *cgiargs, struct threadSta
     sprintf(buf, "%sStat-thread-id:: %d\r\n", buf, thread_stat->thread_id);
     sprintf(buf, "%sStat-thread-count:: %d\r\n", buf, thread_stat->count);
     sprintf(buf, "%sStat-thread-static:: %d\r\n", buf, thread_stat->thread_static);
-    sprintf(buf, "%sStat-thread-dynamic:: %d\r\n\r\n", buf, thread_stat->thread_dynamic);
+    sprintf(buf, "%sStat-thread-dynamic:: %d\r\n", buf, thread_stat->thread_dynamic);
 
-   Rio_writen(fd, buf, strlen(buf));
+    Rio_writen(fd, buf, strlen(buf));
     pid_t pid = Fork();
-   if (pid == 0) {
-      /* Child process */
-      Setenv("QUERY_STRING", cgiargs, 1);
-      /* When the CGI process writes to stdout, it will instead go to the socket */
-      Dup2(fd, STDOUT_FILENO);
-      Execve(filename, emptylist, environ);
-   }
-   //Wait(NULL);
-   // Piazza: change Wait() to waitpid(): https://piazza.com/class/kmeyq2ecrv940z?cid=472
-   else waitpid(pid,NULL,NULL);
+    if (pid == 0) {
+       /* Child process */
+       Setenv("QUERY_STRING", cgiargs, 1);
+       /* When the CGI process writes to stdout, it will instead go to the socket */
+       Dup2(fd, STDOUT_FILENO);
+       Execve(filename, emptylist, environ);
+    }
+    // Piazza: change Wait() to waitpid(): https://piazza.com/class/kmeyq2ecrv940z?cid=472
+    else WaitPid(pid,NULL,NULL);
 }
 
 
@@ -185,28 +177,25 @@ void requestServeStatic(int fd, char *filename, int filesize, struct threadStat 
    sprintf(buf, "%sContent-Length: %d\r\n", buf, filesize);
    sprintf(buf, "%sContent-Type: %s\r\n", buf, filetype);
 
-    sprintf(buf, "%sStat-req-arrival:: %lu.%06lu\r\n", buf, arrival_time->tv_sec,arrival_time->tv_usec);
-    sprintf(buf, "%sStat-req-dispatch:: %lu.%06lu\r\n", buf, dispatch_time->tv_sec,dispatch_time->tv_usec);
+   sprintf(buf, "%sStat-req-arrival:: %lu.%06lu\r\n", buf, arrival_time->tv_sec,arrival_time->tv_usec);
+   sprintf(buf, "%sStat-req-dispatch:: %lu.%06lu\r\n", buf, dispatch_time->tv_sec,dispatch_time->tv_usec);
 
-    sprintf(buf, "%sStat-thread-id:: %d\r\n", buf, thread_stat->thread_id);
-    sprintf(buf, "%sStat-thread-count:: %d\r\n", buf, thread_stat->count);
-    sprintf(buf, "%sStat-thread-static:: %d\r\n", buf, thread_stat->thread_static);
-    sprintf(buf, "%sStat-thread-dynamic:: %d\r\n\r\n", buf, thread_stat->thread_dynamic);
+   sprintf(buf, "%sStat-thread-id:: %d\r\n", buf, thread_stat->thread_id);
+   sprintf(buf, "%sStat-thread-count:: %d\r\n", buf, thread_stat->count);
+   sprintf(buf, "%sStat-thread-static:: %d\r\n", buf, thread_stat->thread_static);
+   sprintf(buf, "%sStat-thread-dynamic:: %d\r\n\r\n", buf, thread_stat->thread_dynamic);
 
    Rio_writen(fd, buf, strlen(buf));
 
    //  Writes out to the client socket the memory-mapped file 
    Rio_writen(fd, srcp, filesize);
    Munmap(srcp, filesize);
-
 }
 
 // handle a request
 void requestHandle(int fd, struct threadStat *thread_stat, struct timeval *dispatch_time, struct timeval *arrival_time)
 {
-    //printf("starting request handle\n");
-
-    // Piazza: thread count should be updated only after we have FINISHED handling a request (i.e. right before returning from this function)
+   // Piazza: thread count should be updated only after we have FINISHED handling a request (i.e. right before returning from this function)
 
    int is_static;
    struct stat sbuf;
@@ -215,72 +204,47 @@ void requestHandle(int fd, struct threadStat *thread_stat, struct timeval *dispa
    rio_t rio;
 
    Rio_readinitb(&rio, fd);
-   //printf("after Rio_readinitb in reqHandle: %d\n",fd);
-
-   if(Rio_readlineb(&rio, buf, MAXLINE) <= 0) {
-       //printf("Error in Rio_readlineb in reqHandle: %d\n",fd);
-   }
-    //printf("Thread executed Rio_readlineb in req handle\n");
+   Rio_readlineb(&rio, buf, MAXLINE);
    sscanf(buf, "%s %s %s", method, uri, version);
-
-    //printf("Thread reached here in req handle\n");
-
-    // For Debugging: Don't forget to uncomment - it's theirs and we commented it only for dubegging
    //printf("%s %s %s\n", method, uri, version);
 
    if (strcasecmp(method, "GET")) {
       requestError(fd, method, "501", "Not Implemented", "OS-HW3 Server does not implement this method",thread_stat,dispatch_time,arrival_time);
-       //printf("finished handling request: %d\n",fd);
-      thread_stat->count += 1;
-      // From Piazza: thread_count = thread_static + thread_dynamic
-      if(requestParseURI(uri, filename, cgiargs)) {
-          thread_stat->thread_static += 1;
-      } else {
-          thread_stat->thread_dynamic += 1;
-      }
+      thread_stat->count += 1; // Update statistics
       return;
    }
-    //printf("Thread reached line 219 in req handle\n");
-
    requestReadhdrs(&rio);
-
-    //printf("Thread reached line 221 in req handle\n");
 
    is_static = requestParseURI(uri, filename, cgiargs);
    if (stat(filename, &sbuf) < 0) {
       requestError(fd, filename, "404", "Not found", "OS-HW3 Server could not find this file",thread_stat,dispatch_time,arrival_time);
-      //printf("finished handling request in error 404: %d\n",fd);
+      // Update statistics
       thread_stat->count += 1;
-       if(requestParseURI(uri, filename, cgiargs)) {
-           thread_stat->thread_static += 1;
-       } else {
-           thread_stat->thread_dynamic += 1;
-       }
       return;
    }
 
    if (is_static) {
-       thread_stat->thread_static += 1;
+
       if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
          requestError(fd, filename, "403", "Forbidden", "OS-HW3 Server could not read this file",thread_stat,dispatch_time,arrival_time);
-         //printf("finished handling request in static error 403: %d\n",fd);
+         // Update statistics
          thread_stat->count += 1;
          return;
       }
       requestServeStatic(fd, filename, sbuf.st_size,thread_stat,dispatch_time,arrival_time);
-       //printf("finished handling request in static: %d\n",fd);
+      thread_stat->thread_static += 1; // Update statistics
    } else {
-       thread_stat->thread_dynamic += 1;
+
       if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
          requestError(fd, filename, "403", "Forbidden", "OS-HW3 Server could not run this CGI program",thread_stat,dispatch_time,arrival_time);
-         //printf("finished handling request: %d\n",fd);
+         // Update statistics
          thread_stat->count += 1;
          return;
       }
       requestServeDynamic(fd, filename, cgiargs,thread_stat,dispatch_time,arrival_time);
+      thread_stat->thread_dynamic += 1; // Update statistics
    }
-   //printf("finished handling request: %d\n",fd);
-   thread_stat->count += 1;
+   thread_stat->count += 1; // Update statistics
 }
 
 

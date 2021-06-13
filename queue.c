@@ -1,4 +1,3 @@
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -40,41 +39,29 @@ void incHandledRequestsCount(struct Queue *queue){
     if(queue == NULL) return;
     queue->handled_requests_count++;
 }
-
+// For Debugging
 int getHandleRequestsCount(struct Queue *queue) {
     if(queue == NULL) return -1;
     return queue->handled_requests_count;
 }
-
+// For Debugging
 void incDroppedRequestsCount(struct Queue *queue){
     if(queue == NULL) return;
     queue->dropped_requests++;
 }
-
+// For Debugging
 int getDroppedRequestsCount(struct Queue *queue) {
     if(queue == NULL) return -1;
     return queue->dropped_requests;
 }
 
-////////////////////////////////
-
 void enqueue(struct Queue *queue, int connfd, struct timeval arrival_time) {
     if(queue == NULL) return;
 
-    //printf("%ld: enqueue element: %d, initial queue size of %d\n", pthread_self(), connfd, queue->queue_size);
-
-
     struct Node *node = malloc(sizeof (struct Node));
-
     if(node == NULL) return;
 
-
-    //printf("got connfd = %d in enqueue\n", connfd);
-
     node->connfd = connfd;
-
-    //printf("died after connfd update in enqueue\n");
-
     node->req_arrival_time = arrival_time;
     node->next = NULL;
 
@@ -89,9 +76,6 @@ void enqueue(struct Queue *queue, int connfd, struct timeval arrival_time) {
     }
 
     queue->queue_size++;
-
-    //printf("New list:\n");
-    //printQueue(queue);
 }
 
 int dequeque(struct Queue *queue) {
@@ -110,25 +94,13 @@ int dequeque(struct Queue *queue) {
     }
     int connfd = temp->connfd;
     free(temp);
-
     queue->queue_size--;
-
-    //printf("%ld: after dequeue of element: %d final queue size: %d\n", pthread_self(),connfd,queue->queue_size);
-    //printf("New list:\n");
-    //printQueue(queue);
 
     return connfd;
 }
 
 void dequequeById(struct Queue *queue, int id) {
-
-    // For Debug
-    //printf("%d\n", queue->handled_requests_count);
-
     if(queue == NULL) return;
-
-    //printf("%ld: looking for id: %d. list before dequequeById:\n",pthread_self(),id);
-    //printQueue(queue);
 
     // Empty queue
     if(queue->queue_size == 0) return;
@@ -149,11 +121,6 @@ void dequequeById(struct Queue *queue, int id) {
 
                 free(iterator);
                 queue->queue_size--;
-
-                //printf("%ld: queue size dequeueById: %d\n",pthread_self(), queue->queue_size);
-                //printf("New list:\n");
-                //printQueue(queue);
-
                 return;
             }
 
@@ -163,22 +130,12 @@ void dequequeById(struct Queue *queue, int id) {
                 queue->end = prev_iterator;
                 free(iterator);
                 queue->queue_size--;
-
-                //printf("%ld: queue size dequeueById: %d\n",pthread_self(), queue->queue_size);
-                //printf("New list:\n");
-                //printQueue(queue);
-
                 return;
             }
 
             prev_iterator->next = iterator->next;
             free(iterator);
             queue->queue_size--;
-
-            //printf("%ld: queue size dequeueById: %d\n",pthread_self(), queue->queue_size);
-            //printf("New list:\n");
-            //printQueue(queue);
-
             return;
         }
 
@@ -201,7 +158,6 @@ int dequequeByIndex(struct Queue *queue, int index) {
 
     for (int i = 0; i < index; ++i) {
         if(iterator == NULL){
-            printf("iterator is NULL\n");
             break;
         }
         prev_iterator = iterator;
@@ -247,6 +203,7 @@ int QueueSize(struct Queue *queue) {
     return queue->queue_size;
 }
 
+// For Debugging
 void printQueue(struct Queue *queue) {
     if(queue == NULL) {
         printf("queue is null\n");

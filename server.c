@@ -22,6 +22,7 @@ pthread_mutex_t mutex;
 struct Queue *waiting_queue;
 struct Queue *currently_executing_queue;
 
+// For Debugging
 // declare them as global variables so they can be accessed via signal handler
 int listenfd;
 char *sched_alg;
@@ -32,27 +33,22 @@ void * thread_workload(void * thread_id) {
     struct threadStat *thread_stat = malloc(sizeof (struct threadStat));
     thread_stat->thread_id = (int)thread_id;
     pthread_mutex_unlock(&mutex);
+
     // after handling a specific request the thread continues waiting for new ones
     while(1) {
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
-        // variable queue_size is updated inside dequeue
 
+        // variable queue_size is updated inside dequeue
         while (QueueSize(waiting_queue) == 0) {
             pthread_cond_wait(&consumer_cond, &mutex);
         }
-
-        //printf("%ld: dequeue of waiting queue\n", pthread_self());
 
         // get request from waiting queue
         struct timeval arrival_time;
         gettimeofday(&arrival_time,NULL);
         getArrivalTimeByIndex(waiting_queue,0,&arrival_time);
-
         int connfd = dequeque(waiting_queue);
-
-        //printf("%ld: enqueue to currently executing queue\n", pthread_self());
-
         enqueue(currently_executing_queue, connfd, arrival_time);
 
         // prepare arguments for statistics
@@ -61,39 +57,32 @@ void * thread_workload(void * thread_id) {
         pthread_mutex_unlock(&mutex);
 
         // get dispatch time
+        struct timeval execute_time;
+        gettimeofday(&execute_time,NULL);
+
         struct timeval dispatch_time;
         gettimeofday(&dispatch_time,NULL);
 
-        dispatch_time.tv_sec = dispatch_time.tv_sec - arrival_time.tv_sec;
-        dispatch_time.tv_usec = dispatch_time.tv_usec - arrival_time.tv_usec;
+        if(execute_time.tv_usec < arrival_time.tv_usec){
+            dispatch_time.tv_sec = (execute_time.tv_sec - arrival_time.tv_sec) - 1;
+            dispatch_time.tv_usec = (execute_time.tv_usec + 1000000) - arrival_time.tv_usec;
+        } else {
+            dispatch_time.tv_sec = execute_time.tv_sec - arrival_time.tv_sec;
+            dispatch_time.tv_usec = execute_time.tv_usec - arrival_time.tv_usec;
+        }
 
         // request handling of a thread shouldn't block the others
         requestHandle(connfd, thread_stat, &dispatch_time, &arrival_time);
 
         // executing critical section - accessing to shared queue
         pthread_mutex_lock(&mutex);
-
-        //FILE *file = fopen("block_output.txt","w+");
-        //int n = fileno(file);
-        // For Debugging
-        //dup2(n,1);
-        incHandledRequestsCount(currently_executing_queue);
-        int x = getHandleRequestsCount(currently_executing_queue);
-        printf("%d\n",x);
-
-        //printf("%ld: dequeue by Id of currently executing queue\n", pthread_self());
-
         dequequeById(currently_executing_queue, connfd);
 
         //printf("closing connfd: %d\n",connfd);
         Close(connfd);
-        //printf("connfd: %d is closed\n",connfd);
 
         // send signal to producer in case queue was full
         pthread_cond_signal(&producer_cond);
-
-        //printf("thread No %ld, closed connection: %d\n", pthread_self(),connfd);
-
         pthread_mutex_unlock(&mutex);
     }
 }
@@ -103,7 +92,6 @@ void createThreadPool(int thread_count) {
     for(int i=0; i<thread_count; i++) {
         pthread_create(&threads[i], NULL, thread_workload, (void*)i);
     }
-    // Perhaps should store threads in list ?
 }
 
 /* Done implementing multi-threaded server */
@@ -135,10 +123,9 @@ int getSchedAlgNum() {
     return -1;
 }
 
+// For Debugging
 void signal_handler(int signum){
-
     //Return type of the handler function should be void
-
     pthread_mutex_destroy(&mutex);
     free(sched_alg);
     destroyQueue(waiting_queue);
@@ -150,6 +137,7 @@ void signal_handler(int signum){
 
 int main(int argc, char *argv[])
 {
+    // For Debugging
     /*
     int listenfd, connfd, port, clientlen, thread_count, max_queue_size, drop_percentage;
     char *sched_alg = malloc(MAX_SCHED_ALG_SIZE);
@@ -186,10 +174,12 @@ int main(int argc, char *argv[])
     pthread_cond_init(&consumer_cond, NULL);
     pthread_mutex_init(&mutex, NULL);
 
+    // For debugging
+    FILE *dpFile = fopen("dropped_requests.txt","w");
+    FILE *droppFile = fopen("dp.txt","w");
+
     // create num_of_threads threads
     createThreadPool(thread_count);
-
-    /* Done multi-thread implementation */
 
     listenfd = Open_listenfd(port);
     while (1) {
@@ -197,8 +187,6 @@ int main(int argc, char *argv[])
 	clientlen = sizeof(clientaddr);
 	connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *) &clientlen);
 
-        //printf("got new client fd: %d\n",connfd);
-	
 	// get arrival time
 	struct timeval arrival_time;
     gettimeofday(&arrival_time,NULL);
@@ -221,8 +209,6 @@ int main(int argc, char *argv[])
                 pthread_cond_wait(&producer_cond, &mutex);
             }
 
-            //printf("%ld: enqueue to waiting queue\n", pthread_self());
-
             // waiting queue size will be increased inside enqueue()
             enqueue(waiting_queue, connfd, arrival_time);
 
@@ -232,20 +218,10 @@ int main(int argc, char *argv[])
             break;
         case 1:
             if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) >= max_queue_size){
-
-                // For Debugging
-                incDroppedRequestsCount(currently_executing_queue);
-                int z = getDroppedRequestsCount(currently_executing_queue);
-                printf("dropped %d\n",z);
-
-                //printf("main thread closing connection: %d\n",connfd);
                 Close(connfd);
-                //printf("queue is full closed connection: %d\n",connfd);
                 pthread_mutex_unlock(&mutex);
-                break; // was continue; changed to break; to fit general structure
+                break;
             }
-
-            //printf("%ld: enqueue to waiting queue\n", pthread_self());
 
             // waiting queue size will be increased inside enqueue()
             enqueue(waiting_queue, connfd, arrival_time);
@@ -259,15 +235,9 @@ int main(int argc, char *argv[])
             enqueue(waiting_queue, connfd, arrival_time);
 
             if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) > max_queue_size){
-            // either check that waiting_queue->queue_size != 0 (but then, in case it is 0 we need to unlock() + continue so we won't
-            // add this request in line 176. or, we can always add, and discard the head -> in this manner we will keep the apropriate size
-            // of both queues.
-
-                // For Debugging
-                incDroppedRequestsCount(currently_executing_queue);
-                int z = getDroppedRequestsCount(currently_executing_queue);
-                //printf("dropped %d\n",z);
-
+                // either check that waiting_queue->queue_size != 0 (but then, in case it is 0 we need to unlock() + continue so we won't
+                // add this request in line 176. or, we can always add, and discard the head -> in this manner we will keep the apropriate size
+                // of both queues.
 
                 // dequeue request from head of the waiting list in case both queues are full
                 int conn_fd = dequeque(waiting_queue);
@@ -287,56 +257,18 @@ int main(int argc, char *argv[])
             // we need to check if waiting_queue->queue_size + currently_executing_queue->queue_size >= max_queue_size
             // also consider corner case where waiting_queue->queue_size == 0
 
-            //printf("try to enqueue\n");
-            //if(waiting_queue == NULL) printf("is NULL\n");
-            //printQueue(waiting_queue);
-
             // waiting queue size will be increased inside enqueue()
             enqueue(waiting_queue, connfd, arrival_time);
 
-            //printf("passed enqueue\n");
-
             if(QueueSize(waiting_queue) + QueueSize(currently_executing_queue) > max_queue_size){
-                // decrease 1 from queue size since we have added the new request
-                int q_size = QueueSize(waiting_queue) - 1;
-				//drop_percentage = (q_size/4) + ((q_size%4) != 0);
-                drop_percentage = ceil(q_size/4);
-
-                /*
-                printf("queue size %d\n",q_size);
-                printf("drop percentage %d\n",drop_percentage);
-
-                printf("waiting executing queue:\n");
-                printQueue(waiting_queue);
-                printf("currently executing queue:\n");
-                printQueue(currently_executing_queue);
-                */
-
+                int q_size = QueueSize(waiting_queue);
+				drop_percentage = (q_size/4) + ((q_size%4) != 0);
                 for (int i = 0; i < drop_percentage; ++i) {
-
-
-
                     int index = rand() % drop_percentage;
-
-                    //printf("passed for\n");
-
                     int conn_fd = dequequeByIndex(waiting_queue,index); // we should return the connfd here to close it
-
-                    //printf("got connfd: %d\n",conn_fd);
-
-                    // For Debugging
-                    incDroppedRequestsCount(currently_executing_queue);
-                    //printf("index: %d\n",index);
-
                     Close(conn_fd);
                 }
-
-                // For Debugging
-                int z = getDroppedRequestsCount(currently_executing_queue);
-                //printf("index: %d, dropped %d\n",z);
             }
-
-            //printf("passed for\n");
 
             /* not sure whether we need to check this or not, but I think we can do it
              * just to make sure we're not waking up threads when queue is empty
@@ -346,35 +278,14 @@ int main(int argc, char *argv[])
                 break;
             }
 
-            //incHandledRequestsCount(currently_executing_queue);
-            //int x = getHandleRequestsCount(currently_executing_queue);
-            //printf("%d\n",x);
-
-            //printf("passed if, queue size: %d\n", QueueSize(waiting_queue));
-
             // now we're sure there's new waiting request
             // signal all threads that a request has been added
             pthread_cond_broadcast(&consumer_cond);
-
-
             pthread_mutex_unlock(&mutex);
-
             break;
         default:
             break;
     }
-
-    // No need to enqueque & broadcast here, handled it in all the different cases.
-    // waiting queue size will be increased inside enqueue()
-    //enqueue(waiting_queue, connfd);
-    // signal all threads that a request has been added
-    //pthread_cond_broadcast(&consumer_cond);
-
-    /* got some problems since we need to use break; inside switch case (and we didn't)
-     * so to fit general structure each case will handle all of the actions required
-     * for a specific scheduling algorithm
-     * */
-    //pthread_mutex_unlock(&mutex);
     /* Done multi-thread implementation */
 
     }
