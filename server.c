@@ -24,8 +24,8 @@ struct Queue *currently_executing_queue;
 
 // For Debugging
 // declare them as global variables so they can be accessed via signal handler
-int listenfd;
-char *sched_alg;
+//int listenfd;
+//char *sched_alg;
 
 
 void * thread_workload(void * thread_id) {
@@ -97,7 +97,7 @@ void createThreadPool(int thread_count) {
 /* Done implementing multi-threaded server */
 
 // HW3: Parse the new arguments too
-void getargs(int *port, int *thread_count, int *max_queue_size, int argc, char *argv[])
+void getargs(int *port, int *thread_count, int *max_queue_size, char* sched_alg, int argc, char *argv[])
 {
     // From Piazza - no need to check for errors. Thank god this is no MATAM
     if (argc < 5) {
@@ -110,7 +110,7 @@ void getargs(int *port, int *thread_count, int *max_queue_size, int argc, char *
     strcpy(sched_alg,argv[4]);
 }
 
-int getSchedAlgNum() {
+int getSchedAlgNum(char* sched_alg) {
     if(strcmp(sched_alg,"block") == 0) {
         return 0;
     } else if(strcmp(sched_alg,"dt") == 0){
@@ -124,6 +124,7 @@ int getSchedAlgNum() {
 }
 
 // For Debugging
+/*
 void signal_handler(int signum){
     //Return type of the handler function should be void
     pthread_mutex_destroy(&mutex);
@@ -133,15 +134,17 @@ void signal_handler(int signum){
     Close(listenfd);
     exit(0);
 }
+*/
 
 
 int main(int argc, char *argv[])
 {
-    // For Debugging
-    /*
+
     int listenfd, connfd, port, clientlen, thread_count, max_queue_size, drop_percentage;
     char *sched_alg = malloc(MAX_SCHED_ALG_SIZE);
-     */
+
+    // For Debugging
+    /*
     if(signal(SIGTSTP , signal_handler)==SIG_ERR) {
         perror("server error: failed to set ctrl-Z handler");
         return 1;
@@ -149,16 +152,14 @@ int main(int argc, char *argv[])
     if(signal(SIGINT , signal_handler)==SIG_ERR) {
         perror("server error: failed to set ctrl-C handler");
         return 1;
-    }
+    }*/
 
-    int connfd, port, clientlen, thread_count, max_queue_size, drop_percentage;
-    sched_alg = malloc(MAX_SCHED_ALG_SIZE);
     struct sockaddr_in clientaddr;
 
-    getargs(&port, &thread_count, &max_queue_size, argc, argv);
+    getargs(&port, &thread_count, &max_queue_size, sched_alg, argc, argv);
 
     // we assume there won't be any error
-    int sched_alg_num = getSchedAlgNum();
+    int sched_alg_num = getSchedAlgNum(sched_alg);
 
     // 
     // HW3: Create some threads...

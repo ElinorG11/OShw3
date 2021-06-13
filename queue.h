@@ -12,10 +12,3 @@ int dequequeByIndex(struct Queue *queue, int index);
 int QueueSize(struct Queue *queue);
 void getArrivalTimeByConnFd(struct Queue *queue, int connfd, struct timeval *arrival_time);
 void getArrivalTimeByIndex(struct Queue *queue, int index, struct timeval *arrival_time);
-
-// For Debugging
-void printQueue(struct Queue *queue);
-void incHandledRequestsCount(struct Queue *queue);
-int getHandleRequestsCount(struct Queue *queue);
-void incDroppedRequestsCount(struct Queue *queue);
-int getDroppedRequestsCount(struct Queue *queue);

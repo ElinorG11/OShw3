@@ -13,9 +13,6 @@ struct Queue{
     struct Node *head;
     struct Node *end;
     int queue_size;
-    /* For Debugging */
-    int handled_requests_count;
-    int dropped_requests;
 };
 
 struct Queue *initQueue() {
@@ -26,33 +23,7 @@ struct Queue *initQueue() {
     queue->head = NULL;
     queue->end = queue->head;
     queue->queue_size = 0;
-
-    // For Debugging
-    queue->handled_requests_count = 0;
-    queue->dropped_requests = 0;
-
     return queue;
-}
-
-// For Debugging
-void incHandledRequestsCount(struct Queue *queue){
-    if(queue == NULL) return;
-    queue->handled_requests_count++;
-}
-// For Debugging
-int getHandleRequestsCount(struct Queue *queue) {
-    if(queue == NULL) return -1;
-    return queue->handled_requests_count;
-}
-// For Debugging
-void incDroppedRequestsCount(struct Queue *queue){
-    if(queue == NULL) return;
-    queue->dropped_requests++;
-}
-// For Debugging
-int getDroppedRequestsCount(struct Queue *queue) {
-    if(queue == NULL) return -1;
-    return queue->dropped_requests;
 }
 
 void enqueue(struct Queue *queue, int connfd, struct timeval arrival_time) {
@@ -201,25 +172,6 @@ int dequequeByIndex(struct Queue *queue, int index) {
 int QueueSize(struct Queue *queue) {
     if(queue == NULL) return 0;
     return queue->queue_size;
-}
-
-// For Debugging
-void printQueue(struct Queue *queue) {
-    if(queue == NULL) {
-        printf("queue is null\n");
-        return;
-    }
-    if(queue->queue_size == 0) {
-        printf("Queue is empty\n");
-        return;
-    }
-
-    struct Node *iterator = queue->head;
-
-    while (iterator != NULL) {
-        printf("Connection Fd of current node is: %d\n", iterator->connfd);
-        iterator = iterator->next;
-    }
 }
 
 void getArrivalTimeByConnFd(struct Queue *queue, int connfd, struct timeval *arrival_time) {
