@@ -174,10 +174,6 @@ int main(int argc, char *argv[])
     pthread_cond_init(&consumer_cond, NULL);
     pthread_mutex_init(&mutex, NULL);
 
-    // For debugging
-    FILE *dpFile = fopen("dropped_requests.txt","w");
-    FILE *droppFile = fopen("dp.txt","w");
-
     // create num_of_threads threads
     createThreadPool(thread_count);
 
