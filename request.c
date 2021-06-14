@@ -28,8 +28,6 @@ void requestError(int fd, char *cause, char *errnum, char *shortmsg, char *longm
    printf("%s", buf);
 
    sprintf(buf, "Content-Length: %lu\r\n", strlen(body));
-   Rio_writen(fd, buf, strlen(buf));
-   printf("%s", buf);
 
    sprintf(buf, "%sStat-Req-Arrival:: %lu.%06lu\r\n", buf, arrival_time->tv_sec,arrival_time->tv_usec);
    sprintf(buf, "%sStat-Req-Dispatch:: %lu.%06lu\r\n", buf, dispatch_time->tv_sec,dispatch_time->tv_usec);
@@ -138,7 +136,7 @@ void requestServeDynamic(int fd, char *filename, char *cgiargs, struct threadSta
        Execve(filename, emptylist, environ);
     }
     // Piazza: change Wait() to waitpid(): https://piazza.com/class/kmeyq2ecrv940z?cid=472
-    else WaitPid(pid,NULL,NULL);
+    else WaitPid(pid,NULL,0);
 }
 
 

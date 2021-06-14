@@ -50,7 +50,7 @@ void * thread_workload(void * thread_id) {
 
         pthread_mutex_unlock(&mutex);
 
-        // get dispatch time
+        // get dispatch interval
         struct timeval execute_time;
         gettimeofday(&execute_time,NULL);
 
