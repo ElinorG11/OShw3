@@ -31,29 +31,14 @@ void requestError(int fd, char *cause, char *errnum, char *shortmsg, char *longm
    Rio_writen(fd, buf, strlen(buf));
    printf("%s", buf);
 
-   sprintf(buf, "Stat-Req-Arrival:: %lu.%06lu\r\n", arrival_time->tv_sec,arrival_time->tv_usec);
-   Rio_writen(fd, buf, strlen(buf));
-   printf("%s", buf);
+   sprintf(buf, "%sStat-Req-Arrival:: %lu.%06lu\r\n", buf, arrival_time->tv_sec,arrival_time->tv_usec);
+   sprintf(buf, "%sStat-Req-Dispatch:: %lu.%06lu\r\n", buf, dispatch_time->tv_sec,dispatch_time->tv_usec);
 
-   sprintf(buf, "Stat-Req-Dispatch:: %lu.%06lu\r\n", dispatch_time->tv_sec,dispatch_time->tv_usec);
+   sprintf(buf, "%sStat-Thread-Id:: %d\r\n", buf, thread_stat->thread_id);
+   sprintf(buf, "%sStat-Thread-Count:: %d\r\n", buf, thread_stat->count);
+   sprintf(buf, "%sStat-Thread-Static:: %d\r\n", buf, thread_stat->thread_static);
+   sprintf(buf, "%sStat-Thread-Dynamic:: %d\r\n\r\n", buf, thread_stat->thread_dynamic);
    Rio_writen(fd, buf, strlen(buf));
-   printf("%s", buf);
-
-   sprintf(buf, "Stat-Thread-Id:: %d\r\n", thread_stat->thread_id);
-   Rio_writen(fd, buf, strlen(buf));
-   printf("%s", buf);
-
-   sprintf(buf, "Stat-Thread-Count:: %d\r\n", thread_stat->count);
-   Rio_writen(fd, buf, strlen(buf));
-   printf("%s", buf);
-
-   sprintf(buf, "Stat-Thread-Static:: %d\r\n", thread_stat->thread_static);
-   Rio_writen(fd, buf, strlen(buf));
-   printf("%s", buf);
-
-   sprintf(buf, "Stat-Thread-Dynamic:: %d\r\n\r\n", thread_stat->thread_dynamic);
-   Rio_writen(fd, buf, strlen(buf));
-   printf("%s", buf);
 
    // Write out the content
    Rio_writen(fd, body, strlen(body));
@@ -209,7 +194,7 @@ void requestHandle(int fd, struct threadStat *thread_stat, struct timeval *dispa
    Rio_readinitb(&rio, fd);
    Rio_readlineb(&rio, buf, MAXLINE);
    sscanf(buf, "%s %s %s", method, uri, version);
-   printf("%s %s %s\n", method, uri, version);
+   //printf("%s %s %s\n", method, uri, version);
 
    if (strcasecmp(method, "GET")) {
       requestError(fd, method, "501", "Not Implemented", "OS-HW3 Server does not implement this method",thread_stat,dispatch_time,arrival_time);
